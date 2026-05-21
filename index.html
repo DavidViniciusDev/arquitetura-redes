@@ -1,0 +1,1427 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arquiteturas de rede de ISP — Evolução</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0a0e1a;
+    --bg-card: #111726;
+    --bg-card-2: #0e1422;
+    --border: #1f2937;
+    --fiber: #00d9ff;
+    --fiber-glow: rgba(0, 217, 255, 0.45);
+    --signal: #fbbf24;
+    --copper: #f97316;
+    --radio: #a78bfa;
+    --text: #f5f5f4;
+    --muted: #94a3b8;
+    --dim: #64748b;
+  }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body {
+    background-image:
+      radial-gradient(ellipse at top, rgba(0, 217, 255, 0.06), transparent 60%),
+      radial-gradient(ellipse at bottom right, rgba(251, 191, 36, 0.04), transparent 60%);
+    padding: 56px 28px 96px;
+  }
+
+  .grain::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.15 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    pointer-events: none;
+    opacity: 0.55;
+    z-index: 100;
+    mix-blend-mode: overlay;
+  }
+
+  .wrap { max-width: 1320px; margin: 0 auto; }
+
+  /* HEADER */
+  header { text-align: center; margin-bottom: 48px; }
+  .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 0.3em;
+    text-transform: uppercase; color: var(--fiber);
+    margin-bottom: 18px;
+  }
+  h1 {
+    font-family: 'Instrument Serif', serif;
+    font-size: clamp(38px, 5.5vw, 68px);
+    font-weight: 400; line-height: 1.05;
+    letter-spacing: -0.02em; margin-bottom: 18px;
+  }
+  h1 em {
+    font-style: italic; color: var(--fiber);
+    text-shadow: 0 0 30px var(--fiber-glow);
+  }
+  .sub {
+    color: var(--muted); font-size: 16.5px;
+    max-width: 640px; margin: 0 auto; line-height: 1.55;
+  }
+  .sub strong { color: var(--fiber); font-weight: 500; }
+
+  /* TABS */
+  .tabs {
+    display: flex; flex-wrap: wrap; gap: 4px;
+    justify-content: center;
+    margin: 40px auto 12px;
+    padding: 6px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    max-width: fit-content;
+  }
+  .tab {
+    background: transparent; border: none; color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px; letter-spacing: 0.08em;
+    text-transform: uppercase; cursor: pointer;
+    padding: 10px 18px; border-radius: 100px;
+    transition: all 0.2s ease;
+    display: flex; align-items: center; gap: 8px;
+    white-space: nowrap;
+  }
+  .tab:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+  .tab.active {
+    background: var(--fiber); color: var(--bg);
+    box-shadow: 0 0 30px rgba(0, 217, 255, 0.4);
+  }
+  .tab-num {
+    font-size: 9px; opacity: 0.6;
+    font-weight: 600;
+  }
+  .tab.active .tab-num { opacity: 0.7; }
+
+  /* ARCH META */
+  .arch-meta {
+    display: flex; gap: 28px; justify-content: center;
+    flex-wrap: wrap;
+    margin: 28px 0 8px;
+    padding: 16px 28px;
+    background: var(--bg-card-2);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    max-width: 900px;
+    margin-left: auto; margin-right: auto;
+  }
+  .meta-item {
+    display: flex; flex-direction: column; gap: 4px;
+    align-items: center;
+  }
+  .meta-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; letter-spacing: 0.25em;
+    text-transform: uppercase; color: var(--dim);
+  }
+  .meta-value {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic; font-size: 19px;
+    color: var(--text);
+  }
+  .arch-overview {
+    color: var(--muted); font-size: 15px;
+    line-height: 1.6; max-width: 800px;
+    margin: 24px auto 0; text-align: center;
+  }
+
+  /* DIAGRAM FLOW */
+  .flow {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0; margin-top: 40px;
+    align-items: stretch; position: relative;
+  }
+
+  .node {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px; padding: 20px 16px 18px;
+    position: relative; cursor: pointer;
+    transition: transform 0.4s ease, border-color 0.3s ease;
+    display: flex; flex-direction: column;
+    z-index: 2; text-align: left; width: 100%;
+    color: inherit; font: inherit;
+  }
+  .node:hover {
+    transform: translateY(-4px); border-color: var(--fiber);
+  }
+  .node:focus-visible {
+    outline: none; border-color: var(--fiber);
+    box-shadow: 0 0 0 2px var(--fiber-glow);
+  }
+
+  .node-plus {
+    position: absolute; top: 12px; right: 12px;
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--dim); font-size: 14px; line-height: 1;
+    transition: all 0.3s ease;
+  }
+  .node:hover .node-plus {
+    color: var(--fiber); border-color: var(--fiber);
+    background: rgba(0, 217, 255, 0.1);
+  }
+
+  .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px; color: var(--dim);
+    letter-spacing: 0.18em; margin-bottom: 14px;
+    text-transform: uppercase;
+  }
+
+  .icon {
+    width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 14px; color: var(--fiber);
+  }
+  .icon svg { width: 100%; height: 100%; stroke-width: 1.4; }
+
+  .name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; font-weight: 600;
+    letter-spacing: 0.04em; text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .role {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic; font-size: 17px;
+    color: var(--text); margin-bottom: 10px;
+    line-height: 1.2;
+  }
+  .desc {
+    font-size: 12.5px; color: var(--muted);
+    line-height: 1.5; flex-grow: 1;
+  }
+
+  /* CONNECTORS */
+  .link {
+    align-self: center; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--fiber), transparent);
+    position: relative; margin: 0 -2px;
+    z-index: 1; box-shadow: 0 0 14px var(--fiber-glow);
+  }
+  .link.copper {
+    background: linear-gradient(90deg, transparent, var(--copper), transparent);
+    box-shadow: 0 0 14px rgba(249, 115, 22, 0.35);
+  }
+  .link.radio {
+    background: linear-gradient(90deg, transparent, var(--radio), transparent);
+    box-shadow: 0 0 14px rgba(167, 139, 250, 0.35);
+  }
+  .link.passive {
+    background: linear-gradient(90deg, transparent, #475569, transparent);
+    box-shadow: none;
+  }
+  .link::after {
+    content: ''; position: absolute;
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--fiber);
+    top: 50%; transform: translateY(-50%);
+    box-shadow: 0 0 12px var(--fiber);
+    animation: pulse 2.8s ease-in-out infinite;
+  }
+  .link.copper::after { background: var(--copper); box-shadow: 0 0 12px var(--copper); }
+  .link.radio::after { background: var(--radio); box-shadow: 0 0 12px var(--radio); }
+  .link.passive::after { background: #94a3b8; box-shadow: 0 0 8px #94a3b8; }
+  .link[data-delay="0"]::after { animation-delay: 0s; }
+  .link[data-delay="1"]::after { animation-delay: 0.4s; }
+  .link[data-delay="2"]::after { animation-delay: 0.8s; }
+  .link[data-delay="3"]::after { animation-delay: 1.2s; }
+  .link[data-delay="4"]::after { animation-delay: 1.6s; }
+  .link[data-delay="5"]::after { animation-delay: 2.0s; }
+
+  @keyframes pulse {
+    0% { left: 0%; opacity: 0; }
+    20% { opacity: 1; }
+    80% { opacity: 1; }
+    100% { left: 100%; opacity: 0; }
+  }
+
+  /* MEDIUM LABELS */
+  .medium {
+    margin-top: 18px; display: grid;
+    grid-template-columns: repeat(7, 1fr); gap: 0;
+  }
+  .medium-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--dim);
+    padding: 6px 4px; text-align: center;
+  }
+  .medium-label.fiber { color: var(--fiber); }
+  .medium-label.copper { color: var(--copper); }
+  .medium-label.radio { color: var(--radio); }
+  .medium-label.signal { color: var(--signal); }
+
+  /* RESPONSIVE STACK */
+  @media (max-width: 1100px) {
+    .flow { grid-template-columns: repeat(4, 1fr); }
+    .medium { display: none; }
+    .link { display: none; }
+  }
+  @media (max-width: 720px) {
+    body { padding: 32px 16px 60px; }
+    .flow { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .node { padding: 16px 12px; }
+    .role { font-size: 15px; }
+  }
+
+  /* MODAL */
+  .modal {
+    position: fixed; inset: 0;
+    background: rgba(5, 7, 14, 0.88);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000; opacity: 0; pointer-events: none;
+    transition: opacity 0.3s ease; padding: 24px;
+  }
+  .modal.open { opacity: 1; pointer-events: auto; }
+
+  .modal-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 0;
+    max-width: 640px; width: 100%;
+    position: relative;
+    transform: translateY(20px) scale(0.96);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 30px 80px rgba(0,0,0,0.6), 0 0 80px rgba(0, 217, 255, 0.12);
+    max-height: 88vh; overflow-y: auto;
+  }
+  .modal.open .modal-card { transform: translateY(0) scale(1); }
+  .modal-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--fiber), transparent);
+    opacity: 0.6;
+  }
+
+  .modal-close {
+    position: absolute; top: 16px; right: 16px;
+    background: rgba(17,23,38,0.85); backdrop-filter: blur(6px);
+    border: 1px solid var(--border); color: var(--muted);
+    width: 34px; height: 34px; border-radius: 50%;
+    font-size: 18px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s ease; line-height: 1;
+    font-family: 'DM Sans', sans-serif; z-index: 10;
+  }
+  .modal-close:hover {
+    color: var(--text); border-color: var(--fiber);
+    background: rgba(0, 217, 255, 0.15);
+  }
+
+  /* MODAL ILLUSTRATION */
+  .modal-illust {
+    height: 180px; display: flex;
+    align-items: center; justify-content: center;
+    background:
+      linear-gradient(135deg, rgba(0,217,255,0.06), rgba(251,191,36,0.04)),
+      var(--bg-card-2);
+    border-radius: 18px 18px 0 0;
+    position: relative;
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .modal-illust::before {
+    content: ''; position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,217,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,217,255,0.04) 1px, transparent 1px);
+    background-size: 24px 24px;
+    mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+  }
+  .modal-illust svg {
+    width: 200px; height: 130px;
+    position: relative; z-index: 1;
+    color: var(--fiber); stroke-width: 1.2;
+  }
+  .modal-illust .illust-label {
+    position: absolute; bottom: 10px; right: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; letter-spacing: 0.25em;
+    color: var(--dim); text-transform: uppercase;
+  }
+
+  .modal-content { padding: 32px 36px 36px; }
+
+  .modal-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px; letter-spacing: 0.28em;
+    color: var(--fiber); text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .modal-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: clamp(32px, 4vw, 44px);
+    line-height: 1.05; margin-bottom: 6px;
+    letter-spacing: -0.02em; font-weight: 400;
+  }
+  .modal-tagline {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic; color: var(--fiber);
+    font-size: 18px; margin-bottom: 24px;
+  }
+  .modal-body {
+    color: var(--muted); font-size: 15px;
+    line-height: 1.72;
+  }
+  .modal-body p + p { margin-top: 12px; }
+  .modal-body strong { color: var(--text); font-weight: 500; }
+  .modal-body em { font-style: italic; color: var(--text); }
+
+  .specs-list {
+    margin-top: 22px; padding: 16px 18px;
+    background: var(--bg-card-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .specs-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px; letter-spacing: 0.25em;
+    color: var(--fiber); text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .spec-item {
+    display: flex; align-items: baseline; gap: 12px;
+    font-size: 13.5px; color: var(--muted);
+    padding: 4px 0;
+  }
+  .spec-item::before {
+    content: '›'; color: var(--fiber);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px; flex-shrink: 0;
+  }
+  .spec-item strong { color: var(--text); margin-right: 4px; }
+
+  .modal-analogy {
+    margin-top: 22px; padding: 16px 18px;
+    border-left: 2px solid var(--signal);
+    background: rgba(251, 191, 36, 0.04);
+    border-radius: 0 8px 8px 0;
+    font-family: 'Instrument Serif', serif;
+    font-style: italic; font-size: 16.5px;
+    color: var(--text); line-height: 1.5;
+  }
+  .modal-analogy::before {
+    content: 'analogia'; display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-style: normal; font-size: 9.5px;
+    letter-spacing: 0.25em; color: var(--signal);
+    text-transform: uppercase; margin-bottom: 6px;
+  }
+
+  /* FOOTNOTE */
+  .footnote {
+    margin-top: 60px; padding: 22px 26px;
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-left: 3px solid var(--signal);
+    border-radius: 8px; color: var(--muted);
+    font-size: 13.5px; line-height: 1.65;
+    max-width: 900px; margin-left: auto; margin-right: auto;
+  }
+  .footnote strong { color: var(--text); font-weight: 500; }
+  .footnote .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 0.25em;
+    color: var(--signal); text-transform: uppercase;
+    display: block; margin-bottom: 8px;
+  }
+</style>
+</head>
+<body class="grain">
+
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">EVOLUÇÃO DAS REDES DE ACESSO</div>
+    <h1>Do <em>discado</em> ao <em>XGS-PON</em><br>em 6 arquiteturas</h1>
+    <p class="sub">Cada época teve seu modelo de chegar até a casa do cliente. Selecione uma arquitetura abaixo e <strong>clique em cada equipamento</strong> para ver detalhes e ilustração.</p>
+  </header>
+
+  <!-- TABS -->
+  <nav class="tabs" id="tabs"></nav>
+
+  <!-- ARCH META -->
+  <div class="arch-meta" id="arch-meta"></div>
+  <p class="arch-overview" id="arch-overview"></p>
+
+  <!-- FLOW -->
+  <div class="flow" id="flow"></div>
+  <div class="medium" id="medium"></div>
+
+  <div class="footnote" id="footnote"></div>
+
+</div>
+
+<!-- MODAL -->
+<div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal-card">
+    <button id="modal-close" class="modal-close" aria-label="Fechar">×</button>
+    <div class="modal-illust">
+      <div id="modal-svg"></div>
+      <span class="illust-label">ilustração</span>
+    </div>
+    <div class="modal-content">
+      <div id="modal-eyebrow" class="modal-eyebrow"></div>
+      <h2 id="modal-title" class="modal-title"></h2>
+      <div id="modal-tagline" class="modal-tagline"></div>
+      <div id="modal-body" class="modal-body"></div>
+      <div id="modal-specs" class="specs-list" style="display:none"></div>
+      <div id="modal-analogy" class="modal-analogy"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================================
+   SVG ILLUSTRATIONS LIBRARY
+   Stylized line-art representations of each piece of equipment.
+   ========================================================================= */
+
+const SVG = {
+  // ICONS (small, for cards)
+  ic_globe: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg>`,
+  ic_router: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="6" rx="1"/><rect x="3" y="14" width="18" height="6" rx="1"/><circle cx="7" cy="7" r="0.8" fill="currentColor"/><circle cx="7" cy="17" r="0.8" fill="currentColor"/></svg>`,
+  ic_switch: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="9" width="20" height="6" rx="1"/><path d="M6 9V6M10 9V6M14 9V6M18 9V6M6 18v-3M10 18v-3M14 18v-3M18 18v-3"/></svg>`,
+  ic_olt: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="6" width="18" height="12" rx="1.5"/><path d="M7 10h2M7 14h2M12 10h2M12 14h2"/><circle cx="18" cy="12" r="1" fill="currentColor"/></svg>`,
+  ic_split: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M2 12h6"/><path d="M8 12l4-6M8 12l4-2M8 12l4 2M8 12l4 6"/><circle cx="14" cy="6" r="1.2"/><circle cx="14" cy="10" r="1.2"/><circle cx="14" cy="14" r="1.2"/><circle cx="14" cy="18" r="1.2"/></svg>`,
+  ic_onu: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 10l8-6 8 6v9a1 1 0 0 1-1 1h-14a1 1 0 0 1-1-1z"/><circle cx="12" cy="13" r="2"/><path d="M12 13v-2"/></svg>`,
+  ic_devices: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="14" height="10" rx="1"/><path d="M10 14v3M7 17h6"/><rect x="17" y="9" width="5" height="9" rx="0.8"/><circle cx="19.5" cy="16" r="0.4" fill="currentColor"/></svg>`,
+  ic_modem: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="4" y="8" width="16" height="9" rx="1"/><circle cx="8" cy="13" r="0.8" fill="currentColor"/><circle cx="11" cy="13" r="0.8" fill="currentColor"/><circle cx="14" cy="13" r="0.8" fill="currentColor"/><path d="M12 8V5M10 5h4"/></svg>`,
+  ic_pc: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="13" rx="1"/><path d="M9 20h6M12 17v3M3 14h18"/></svg>`,
+  ic_phone: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 4h4l2 5-3 2a11 11 0 0 0 5 5l2-3 5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg>`,
+  ic_central: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 21V9l9-5 9 5v12"/><path d="M3 21h18M9 21v-6h6v6M9 12h.01M15 12h.01"/></svg>`,
+  ic_ras: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M3 8h18M3 13h18M3 18h18"/><circle cx="6" cy="5.5" r="0.5" fill="currentColor"/><circle cx="6" cy="10.5" r="0.5" fill="currentColor"/><circle cx="6" cy="15.5" r="0.5" fill="currentColor"/></svg>`,
+  ic_dslam: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M7 6v12M11 6v12M15 6v12M19 6v12"/></svg>`,
+  ic_wire: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M2 12c4 0 4-4 8-4s4 8 8 8 4-4 4-4"/></svg>`,
+  ic_coax: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>`,
+  ic_cmts: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="5" width="20" height="14" rx="1"/><path d="M6 9h2M10 9h2M14 9h2M18 9h.01M6 13h2M10 13h2M14 13h2M18 13h.01M6 17h2M10 17h2M14 17h2M18 17h.01"/></svg>`,
+  ic_node: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="5" y="6" width="14" height="14" rx="1"/><path d="M9 6V3h6v3M9 14h6M9 11h6"/></svg>`,
+  ic_amp: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 12l8-7v14z"/><path d="M12 12h8M16 8v8"/></svg>`,
+  ic_tap: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="9" width="18" height="6" rx="1"/><circle cx="8" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="16" cy="12" r="1"/><path d="M2 12h1M21 12h1"/></svg>`,
+  ic_dish: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3a9 9 0 0 1 9 9"/><path d="M12 7a5 5 0 0 1 5 5"/><circle cx="12" cy="12" r="1.5"/><path d="M12 13v8M9 21h6"/></svg>`,
+  ic_sectoral: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="3" width="6" height="14" rx="1"/><path d="M12 17v4M9 21h6M7 8h-2M7 12h-3M19 8h-2M19 12h3"/></svg>`,
+  ic_tower: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 22l6-19 6 19M9 14h6M8 17h8"/></svg>`,
+  ic_radio: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8a6 6 0 0 1 0 8.4M19 5a10 10 0 0 1 0 14M7.8 7.8a6 6 0 0 0 0 8.4M5 5a10 10 0 0 0 0 14"/></svg>`,
+  ic_dwdm: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="8" width="18" height="8" rx="1"/><path d="M3 12h4M17 12h4M9 10v4M11 10v4M13 10v4M15 10v4"/></svg>`,
+  ic_wifi6: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="6" y="11" width="12" height="8" rx="1"/><circle cx="9" cy="15" r="0.5" fill="currentColor"/><circle cx="12" cy="15" r="0.5" fill="currentColor"/><circle cx="15" cy="15" r="0.5" fill="currentColor"/><path d="M9 11V8M12 11V5M15 11V8"/></svg>`,
+
+  // LARGE ILLUSTRATIONS (for modals)
+  il_internet: `<svg viewBox="0 0 200 130" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="100" cy="65" r="42"/>
+    <ellipse cx="100" cy="65" rx="42" ry="18"/>
+    <ellipse cx="100" cy="65" rx="18" ry="42"/>
+    <path d="M58 65h84M100 23v84"/>
+    <circle cx="62" cy="50" r="2" fill="currentColor"/>
+    <circle cx="138" cy="80" r="2" fill="currentColor"/>
+    <circle cx="115" cy="40" r="2" fill="currentColor"/>
+    <circle cx="80" cy="92" r="2" fill="currentColor"/>
+  </svg>`,
+  il_modem56k: `<svg viewBox="0 0 200 130" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="40" y="45" width="120" height="55" rx="4"/>
+    <rect x="40" y="45" width="120" height="14" rx="4"/>
+    <text x="100" y="55" fill="currentColor" stroke="none" font-family="JetBrains Mono" font-size="8" text-anchor="middle" letter-spacing="2">U.S. ROBOTICS 56K</text>
+    <circle cx="55" cy="78" r="2" fill="currentColor"/>
+    <circle cx="68" cy="78" r="2" fill="currentColor"/>
+    <circle cx="81" cy="78" r="2" fill="currentColor"/>
+    <circle cx="94" cy="78" r="2" fill="currentColor"/>
+    <circle cx="107" cy="78" r="2" fill="currentColor"/>
+    <circle cx="120" cy="78" r="2" fill="currentColor"/>
+    <text x="100" y="93" fill="currentColor" stroke="none" font-family="JetBrains Mono" font-size="6" text-anchor="middle">PWR  RD  SD  CD  TR  CTS</text>
+    <rect x="55" y="100" width="22" height="6" rx="1"/>
+    <rect x="123" y="100" width="22" height="6" rx="1"/>
+    <path d="M66 106v8M134 106v8"/>
+  </svg>`,
+  il_phoneline: `<svg viewBox="0 0 200 130" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M50 20v90M150 20v90"/>
+    <path d="M40 30h20M40 50h20M140 30h20M140 50h20"/>
+    <path d="M50 35c20 5 80 -5 100 0M50 45c20 5 80 -5 100 0M50 55c20 5 80 -5 100 0"/>
+    <path d="M50 110h100"/>
+    <circle cx="50" cy="35" r="1.5" fill="currentColor"/>
+    <circle cx="50" cy="45" r="1.5" fill="currentColor"/>
+    <circle cx="50" cy="55" r="1.5" fill="currentColor"/>
+    <circle cx="150" cy="35" r="1.5" fill="currentColor"/>
+    <circle cx="150" cy="45" r="1.5" fill="currentColor"/>
+    <circle cx="150" cy="55" r="1.5" fill="currentColor"/>
+  </svg>`,
+  il_central: `<svg viewBox="0 0 200 130" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M50 100V50l50-25 50 25v50z"/>
+    <path d="M50 100h100"/>
+    <rect x="68" y="65" width="14" height="14"/>
+    <rect x="93" y="65" width="14" height="14"/>
+    <rect x="118" y="65" width="14" height="14"/>
+    <rect x="80" y="85" width="40" height="15"/>
+    <path d="M100 25v-12M94 18h12"/>
+    <circle cx="100" cy="11" r="2" fill="currentColor"/>
+  </svg>`,
+  il_ras: `<svg viewBox="0 0 200 130" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="40" y="15" width="120" height="100" rx="3"/>
+    <path d="M40 30h120M40 50h120M40 70h120M40 90h120"/>
+    <circle cx="50" cy="22" r="1.5" fill="currentColor"/>
+    <circle cx="50" cy="40" r="1.5" fill="currentColor"/>
+    <circle cx="50" cy="60" r="1.5" fill="currentColor"/>
+    <circle cx="50" cy="80" r="1.5" fill="currentColor"/>
+    <circle cx="50" cy="100" r="1.5" fill="currentColor"/>
+    <path d="M70 22h70M70 40h70M70 60h70M70 80h70M70 100h70"/>
+    <text x="100" y="113" fill="currentColor" stroke="none" font-family="JetBrains Mono" font-size="6" text-anchor="middle" letter-spacing="2">MODEM BANK</text>
+  </svg>`,
+  il_router_classic: `<svg viewBox="0 0 200 130" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="30" y="50" width="140" height="40" rx="3"/>
+    <circle cx="45" cy="60" r="1.5" fill="currentColor"/>
+    <circle cx="55" cy="60" r="1.5" fill="currentColor"/>
+    <circle cx="65" cy="60" r="1.5" fill="currentColor"/>
+    <rect x="85" y="56" width="14" height="8" rx="1"/>
+    <rect x="105" y="56" width="14" height="8" rx="1"/>
+    <rect x="125" y="56" width="14" height="8" rx="1"/>
+    <rect x="145" y="56" width="14" height="8" rx="1"/>
+    <text x="100" y="80" fill="currentColor" stroke="none" font-family="JetBrains Mono" font-size="7" text-anchor="middle">CISCO 2500</text>
+  </svg>`,
+  il_pc: `<svg viewBox="0 0 200 130" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="40" y="20" width="120" height="75" rx="4"/>
+    <rect x="50" y="30" width="100" height="55"/>
+    <rect x="80" y="95" width="40" height="15"/>
+    <path d="M65 110h70"/>
+    <circle cx="100" cy="55" r="1.5" fill="currentColor"/>
+    <text x="100" y="62" fill="currentColor" stroke="none" font-family="JetBrains Mono" font-size="6" text-anchor="middle">CONNECTING...</text>
+  </svg>`,
+  il_adsl_modem: `<svg viewBox="0 0 200 130" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="40" y="45" width="120" height="55" rx="4"/>
+    <path d="M150 45v-15M155 35c-3-3-7-3-10 0M158 30c-5-5-13-5-18 0"/>
+    <circle cx="55" cy="60" r="2" fill="currentColor"/>
+    <circle cx="68" cy="60" r="2" fill="currentColor"/>
+    <circle cx="81" cy="60" r="2" fill="currentColor"/>
+    <circle cx="94" cy="60" r="2" fill="currentColor"/>
+    <circle cx="107" cy="60" r="2" fill="currentColor"/>
+    <text x="80" y="80" fill="currentColor" stroke="none" font-family="JetBrains Mono" font-size="7" text-anchor="middle">ADSL2+ WI-FI</text>
+    <rect x="55" y="90" width="12" height="6" rx="1"/>
+    <rect x="72" y="90" width="12" height="6" rx="1"/>
+    <rect x="89" y="90" width="12" height="6" rx="1"/>
+    <rect x="106" y="90" width="12" height="6" rx="1"/>
+    <rect x="135" y="90" width="14" height="6" rx="1"/>
+  </svg>`,
+  il_dslam: `<svg viewBox="0 0 200 130" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="50" y="10" width="100" height="110" rx="3"/>
+    <rect x="58" y="20" width="84" height="15" rx="1"/>
+    <rect x="58" y="40" width="84" height="15" rx="1"/>
+    <rect x="58" y="60" width="84" height="15" rx="1"/>
+    <rect x="58" y="80" width="84" height="15" rx="1"/>
+    <rect x="58" y="100" width="84" height="12" rx="1"/>
+    <g fill="currentColor"><circle cx="65" cy="27" r="1"/><circle cx="70" cy="27" r="1"/><circle cx="75" cy="27" r="1"/><circle cx="80" cy="27" r="1"/><circle cx="85" cy="27" r="1"/><circle cx="90" cy="27" r="1"/><circle cx="95" cy="27" r="1"/><circle cx="100" cy="27" r="1"/><circle cx="105" cy="27" r="1"/><circle cx="110" cy="27" r="1"/><circle cx="115" cy="27" r="1"/><circle cx="120" cy="27" r="1"/><circle cx="125" cy="27" r="1"/><circle cx="130" cy="27" r="1"/><circle cx="135" cy="27" r="1"/></g>
+    <g fill="currentColor"><circle cx="65" cy="47" r="1"/><circle cx="70" cy="47" r="1"/><circle cx="75" cy="47" r="1"/><circle cx="80" cy="47" r="1"/><circle cx="85" cy="47" r="1"/><circle cx="90" cy="47" r="1"/><circle cx="95" cy="47" r="1"/><circle cx="100" cy="47" r="1"/><circle cx="105" cy="47" r="1"/><circle cx="110" cy="47" r="1"/><circle cx="115" cy="47" r="1"/><circle cx="120" cy="47" r="1"/><circle cx="125" cy="47" r="1"/><circle cx="130" cy="47" r="1"/><circle cx="135" cy="47" r="1"/></g>
+    <g fill="currentColor"><circle cx="65" cy="67" r="1"/><circle cx="75" cy="67" r="1"/><circle cx="85" cy="67" r="1"/><circle cx="95" cy="67" r="1"/><circle cx="105" cy="67" r="1"/><circle cx="115" cy="67" r="1"/><circle cx="125" cy="67" r="1"/><circle cx="135" cy="67" r="1"/></g>
+    <text x="100" y="109" fill="currentColor" stroke="none" font-family="JetBrains Mono" font-size="5" text-anchor="middle">DSLAM</text>
+  </svg>`,
+  il_microfilter: `<svg viewBox="0 0 200 130" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="70" y="55" width="60" height="30" rx="3"/>
+    <path d="M70 70h-30"/>
+    <circle cx="40" cy="70" r="2"/>
+    <path d="M130 60l25-15"/>
+    <path d="M130 80l25 15"/>
+    <circle cx="158" cy="42" r="3"/>
+    <circle cx="158" cy="98" r="3"/>
+    <text x="100" y="74" fill="currentColor" stroke="none" font-family="JetBrains Mono" font-size="6" text-anchor="middle">SPLITTER</text>
+    <text x="155" y="35" fill="currentColor" stroke="none" font-family="JetBrains Mono" font-size="5" text-anchor="middle">VOZ</text>
+    <text x="155" y="115" fill="currentColor" stroke="none" font-family="JetBrains Mono" font-size="5" text-anchor="middle">DADOS</text>
+  </svg>`,
+  il_bras: `<svg viewBox="0 0 200 130" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="35" y="40" width="130" height="20" rx="2"/>
+    <rect x="35" y="65" width="130" height="20" rx="2"/>
+    <rect x="35" y="90" width="130" height="20" rx="2"/>
+    <g fill="currentColor"><circle cx="45" cy="50" r="1.2"/><circle cx="50" cy="50" r="1.2"/><circle cx="55" cy="50" r="1.2"/></g>
+    <path d="M70 47h15M70 53h15M90 47h15M90 53h15M110 47h15M110 53h15M130 47h15M130 53h15"/>
+    <path d="M70 72h15M70 78h15M90 72h15M90 78h15M110 72h15M110 78h15M130 72h15M130 78h15"/>
+    <text x="100" y="103" fill="currentColor" stroke="none" font-family="JetBrains Mono" font-size="6" text-anchor="middle" letter-spacing="2">BRAS / BNG</text>
+  </svg>`,
+  il_cable_modem: `<svg viewBox="0 0 200 130" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="50" y="40" width="100" height="60" rx="4"/>
+    <circle cx="60" cy="55" r="2" fill="currentColor"/>
+    <circle cx="70" cy="55" r="2" fill="currentColor"/>
+    <circle cx="80" cy="55" r="2" fill="currentColor"/>
+    <circle cx="90" cy="55" r="2" fill="currentColor"/>
+    <text x="100" y="78" fill="currentColor" stroke="none" font-family="JetBrains Mono" font-size="6" text-anchor="middle">DOCSIS 3.1</text>
+    <circle cx="60" cy="95" r="3"/>
+    <circle cx="60" cy="95" r="1" fill="currentColor"/>
+    <rect x="80" y="92" width="12" height="6" rx="1"/>
+    <rect x="98" y="92" width="12" height="6" rx="1"/>
+    <rect x="116" y="92" width="12" height="6" rx="1"/>
+    <rect x="134" y="92" width="12" height="6" rx="1"/>
+  </svg>`,
+  il_tap: `<svg viewBox="0 0 200 130" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="50" y="50" width="100" height="40" rx="3"/>
+    <circle cx="40" cy="70" r="3"/>
+    <circle cx="40" cy="70" r="1" fill="currentColor"/>
+    <circle cx="160" cy="70" r="3"/>
+    <circle cx="160" cy="70" r="1" fill="currentColor"/>
+    <circle cx="80" cy="100" r="3"/>
+    <circle cx="80" cy="100" r="1" fill="currentColor"/>
+    <circle cx="100" cy="100" r="3"/>
+    <circle cx="100" cy="100" r="1" fill="currentColor"/>
+    <circle cx="120" cy="100" r="3"/>
+    <circle cx="120" cy="100" r="1" fill="currentColor"/>
+    <path d="M43 70h7M150 70h7M80 90v7M100 90v7M120 90v7"/>
+    <text x="100" y="75" fill="currentColor" stroke="none" font-family="JetBrains Mono" font-size="6" text-anchor="middle">4-WAY TAP</text>
+    <text x="40" y="62" fill="currentColor" stroke="none" font-family="JetBrains Mono" font-size="5" text-anchor="middle">IN</text>
+    <text x="160" y="62" fill="currentColor" stroke="none" font-family="JetBrains Mono" font-size="5" text-anchor="middle">OUT</text>
+  </svg>`,
+  il_fiber_node: `<svg viewBox="0 0 200 130" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M60 30h80v80h-80z"/>
+    <path d="M68 38h64v8h-64zM68 50h64v8h-64z"/>
+    <text x="100" y="55" fill="currentColor" stroke="none" font-family="JetBrains Mono" font-size="6" text-anchor="middle">FIBER NODE</text>
+    <circle cx="80" cy="78" r="3"/>
+    <circle cx="100" cy="78" r="3"/>
+    <circle cx="120" cy="78" r="3"/>
+    <path d="M80 80v15M100 80v15M120 80v15M70 110h60"/>
+    <path d="M100 30v-15"/>
+    <circle cx="100" cy="13" r="2"/>
+    <text x="100" y="100" fill="currentColor" stroke="none" font-family="JetBrains Mono" font-size="5" text-anchor="middle">RF OUT</text>
+    <text x="100" y="9" fill="currentColor" stroke="none" font-family="JetBrains Mono" font-size="5" text-anchor="middle">FIBRA IN</text>
+  </svg>`,
+  il_cmts: `<svg viewBox="0 0 200 130" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="35" y="15" width="130" height="100" rx="3"/>
+    <rect x="42" y="22" width="116" height="16" rx="1"/>
+    <rect x="42" y="42" width="116" height="16" rx="1"/>
+    <rect x="42" y="62" width="116" height="16" rx="1"/>
+    <rect x="42" y="82" width="116" height="16" rx="1"/>
+    <rect x="42" y="102" width="116" height="9" rx="1"/>
+    <g fill="currentColor">
+      <circle cx="50" cy="30" r="2"/><circle cx="58" cy="30" r="2"/><circle cx="66" cy="30" r="2"/><circle cx="74" cy="30" r="2"/><circle cx="82" cy="30" r="2"/><circle cx="90" cy="30" r="2"/><circle cx="98" cy="30" r="2"/><circle cx="106" cy="30" r="2"/>
+    </g>
+    <text x="100" y="108" fill="currentColor" stroke="none" font-family="JetBrains Mono" font-size="5" text-anchor="middle">CMTS · CISCO uBR10K</text>
+  </svg>`,
+  il_amp: `<svg viewBox="0 0 200 130" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M60 30l60 35-60 35z"/>
+    <path d="M30 65h30M120 65h40"/>
+    <circle cx="25" cy="65" r="3"/>
+    <circle cx="165" cy="65" r="3"/>
+    <text x="90" y="68" fill="currentColor" stroke="none" font-family="JetBrains Mono" font-size="8" text-anchor="middle">×</text>
+    <text x="25" y="80" fill="currentColor" stroke="none" font-family="JetBrains Mono" font-size="5" text-anchor="middle">IN</text>
+    <text x="165" y="80" fill="currentColor" stroke="none" font-family="JetBrains Mono" font-size="5" text-anchor="middle">OUT</text>
+    <text x="100" y="110" fill="currentColor" stroke="none" font-family="JetBrains Mono" font-size="6" text-anchor="middle">AMPLIFICADOR RF</text>
+  </svg>`,
+  il_cpe_wireless: `<svg viewBox="0 0 200 130" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <ellipse cx="100" cy="55" rx="35" ry="12"/>
+    <path d="M100 55a35 35 0 0 0 -25 -10M100 55a35 35 0 0 0 25 -10"/>
+    <path d="M100 55v45"/>
+    <rect x="92" y="65" width="16" height="22" rx="2"/>
+    <circle cx="100" cy="76" r="2"/>
+    <path d="M85 100h30M100 87v13"/>
+    <path d="M100 20l-3 -8h6z" fill="currentColor"/>
+    <path d="M100 20v5"/>
+    <text x="100" y="120" fill="currentColor" stroke="none" font-family="JetBrains Mono" font-size="6" text-anchor="middle">CPE 5GHz</text>
+  </svg>`,
+  il_sectoral: `<svg viewBox="0 0 200 130" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="90" y="15" width="20" height="80" rx="2"/>
+    <path d="M100 95v15M90 110h20"/>
+    <path d="M80 35h-15M80 55h-15M80 75h-15M120 35h15M120 55h15M120 75h15"/>
+    <path d="M55 35l-10 -10M55 55h-15M55 75l-10 10M145 35l10 -10M145 55h15M145 75l10 10"/>
+    <text x="100" y="55" fill="currentColor" stroke="none" font-family="JetBrains Mono" font-size="5" text-anchor="middle" transform="rotate(-90 100 55)">90°</text>
+    <text x="100" y="125" fill="currentColor" stroke="none" font-family="JetBrains Mono" font-size="6" text-anchor="middle">SECTORAL AP</text>
+  </svg>`,
+  il_tower: `<svg viewBox="0 0 200 130" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M70 115l30-95l30 95"/>
+    <path d="M80 85h40M85 65h30M90 45h20"/>
+    <path d="M80 100h40M75 115h50"/>
+    <rect x="95" y="10" width="10" height="14" rx="1"/>
+    <path d="M88 18l-8 -4M112 18l8 -4"/>
+    <circle cx="100" cy="17" r="2"/>
+    <path d="M65 80a20 20 0 0 1 5 -10M135 80a20 20 0 0 0 -5 -10" stroke-dasharray="2 2"/>
+  </svg>`,
+  il_ptp: `<svg viewBox="0 0 200 130" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M30 90l15 -50l15 50M40 75h10"/>
+    <path d="M40 90h10"/>
+    <ellipse cx="48" cy="42" rx="6" ry="4"/>
+    <path d="M170 90l-15 -50l-15 50M150 75h10"/>
+    <path d="M150 90h10"/>
+    <ellipse cx="152" cy="42" rx="6" ry="4"/>
+    <path d="M55 42q50 -25 100 0" stroke-dasharray="3 3"/>
+    <text x="100" y="32" fill="currentColor" stroke="none" font-family="JetBrains Mono" font-size="6" text-anchor="middle">60 GHz · 1 Gbps</text>
+    <text x="100" y="115" fill="currentColor" stroke="none" font-family="JetBrains Mono" font-size="6" text-anchor="middle">PtP BACKHAUL</text>
+  </svg>`,
+  il_olt: `<svg viewBox="0 0 200 130" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="30" y="15" width="140" height="100" rx="3"/>
+    <rect x="38" y="22" width="124" height="14" rx="1"/>
+    <rect x="38" y="40" width="124" height="14" rx="1"/>
+    <rect x="38" y="58" width="124" height="14" rx="1"/>
+    <rect x="38" y="76" width="124" height="14" rx="1"/>
+    <rect x="38" y="94" width="124" height="14" rx="1"/>
+    <g fill="currentColor">
+      <circle cx="48" cy="29" r="1.5"/><circle cx="56" cy="29" r="1.5"/><circle cx="64" cy="29" r="1.5"/><circle cx="72" cy="29" r="1.5"/><circle cx="80" cy="29" r="1.5"/><circle cx="88" cy="29" r="1.5"/><circle cx="96" cy="29" r="1.5"/><circle cx="104" cy="29" r="1.5"/><circle cx="112" cy="29" r="1.5"/><circle cx="120" cy="29" r="1.5"/><circle cx="128" cy="29" r="1.5"/><circle cx="136" cy="29" r="1.5"/><circle cx="144" cy="29" r="1.5"/><circle cx="152" cy="29" r="1.5"/>
+    </g>
+    <g fill="currentColor">
+      <circle cx="48" cy="47" r="1.5"/><circle cx="56" cy="47" r="1.5"/><circle cx="64" cy="47" r="1.5"/><circle cx="72" cy="47" r="1.5"/><circle cx="80" cy="47" r="1.5"/><circle cx="88" cy="47" r="1.5"/><circle cx="96" cy="47" r="1.5"/><circle cx="104" cy="47" r="1.5"/><circle cx="112" cy="47" r="1.5"/><circle cx="120" cy="47" r="1.5"/><circle cx="128" cy="47" r="1.5"/><circle cx="136" cy="47" r="1.5"/><circle cx="144" cy="47" r="1.5"/><circle cx="152" cy="47" r="1.5"/>
+    </g>
+    <text x="100" y="106" fill="currentColor" stroke="none" font-family="JetBrains Mono" font-size="5" text-anchor="middle">OLT · GPON · 16 PORTS</text>
+  </svg>`,
+  il_splitter: `<svg viewBox="0 0 200 130" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M20 65h35"/>
+    <circle cx="18" cy="65" r="2"/>
+    <rect x="55" y="35" width="50" height="60" rx="2"/>
+    <text x="80" y="62" fill="currentColor" stroke="none" font-family="JetBrains Mono" font-size="6" text-anchor="middle">PLC 1:8</text>
+    <text x="80" y="72" fill="currentColor" stroke="none" font-family="JetBrains Mono" font-size="5" text-anchor="middle">PASSIVO</text>
+    <path d="M105 40l35 -15M105 47l35 -8M105 54l35 -2M105 60l35 3M105 67l35 -3M105 74l35 3M105 81l35 8M105 88l35 15"/>
+    <g fill="currentColor"><circle cx="142" cy="25" r="1.5"/><circle cx="142" cy="39" r="1.5"/><circle cx="142" cy="52" r="1.5"/><circle cx="142" cy="63" r="1.5"/><circle cx="142" cy="64" r="1.5"/><circle cx="142" cy="77" r="1.5"/><circle cx="142" cy="89" r="1.5"/><circle cx="142" cy="103" r="1.5"/></g>
+  </svg>`,
+  il_cto: `<svg viewBox="0 0 200 130" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="60" y="20" width="80" height="90" rx="3"/>
+    <rect x="68" y="30" width="64" height="6" rx="1"/>
+    <path d="M68 50h64M68 60h64M68 70h64M68 80h64M68 90h64"/>
+    <g fill="currentColor">
+      <circle cx="75" cy="50" r="1"/><circle cx="85" cy="50" r="1"/><circle cx="95" cy="50" r="1"/><circle cx="105" cy="50" r="1"/><circle cx="115" cy="50" r="1"/><circle cx="125" cy="50" r="1"/>
+      <circle cx="75" cy="60" r="1"/><circle cx="85" cy="60" r="1"/><circle cx="95" cy="60" r="1"/><circle cx="105" cy="60" r="1"/><circle cx="115" cy="60" r="1"/><circle cx="125" cy="60" r="1"/>
+    </g>
+    <text x="100" y="34" fill="currentColor" stroke="none" font-family="JetBrains Mono" font-size="5" text-anchor="middle">CTO 16</text>
+    <path d="M100 110v8M70 118h60"/>
+  </svg>`,
+  il_onu: `<svg viewBox="0 0 200 130" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="50" y="35" width="100" height="60" rx="4"/>
+    <text x="100" y="55" fill="currentColor" stroke="none" font-family="JetBrains Mono" font-size="6" text-anchor="middle">ONT GPON</text>
+    <circle cx="62" cy="70" r="2" fill="currentColor"/>
+    <circle cx="72" cy="70" r="2" fill="currentColor"/>
+    <circle cx="82" cy="70" r="2" fill="currentColor"/>
+    <circle cx="92" cy="70" r="2" fill="currentColor"/>
+    <text x="100" y="83" fill="currentColor" stroke="none" font-family="JetBrains Mono" font-size="5" text-anchor="middle">PWR PON LOS LAN</text>
+    <path d="M50 75h-15"/>
+    <circle cx="32" cy="75" r="2.5"/>
+    <text x="32" y="65" fill="currentColor" stroke="none" font-family="JetBrains Mono" font-size="5" text-anchor="middle">FIBRA</text>
+    <rect x="120" y="88" width="10" height="5" rx="1"/>
+    <rect x="135" y="88" width="10" height="5" rx="1"/>
+    <path d="M155 60c5 -5 5 -15 0 -20M165 65c10 -10 10 -30 0 -40"/>
+  </svg>`,
+  il_devices: `<svg viewBox="0 0 200 130" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="30" y="35" width="80" height="55" rx="3"/>
+    <rect x="38" y="42" width="64" height="40"/>
+    <rect x="65" y="90" width="20" height="10"/>
+    <path d="M55 100h40"/>
+    <rect x="125" y="40" width="35" height="60" rx="4"/>
+    <rect x="130" y="48" width="25" height="40"/>
+    <circle cx="142.5" cy="94" r="1.5"/>
+    <path d="M170 55c5 -5 5 -15 0 -20M180 60c10 -10 10 -30 0 -40" stroke="currentColor"/>
+  </svg>`,
+  il_bng_modern: `<svg viewBox="0 0 200 130" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="20" y="35" width="160" height="60" rx="3"/>
+    <path d="M20 50h160M20 80h160"/>
+    <g fill="currentColor"><circle cx="30" cy="42" r="1"/><circle cx="35" cy="42" r="1"/><circle cx="40" cy="42" r="1"/></g>
+    <rect x="55" y="40" width="8" height="6" rx="1"/>
+    <rect x="68" y="40" width="8" height="6" rx="1"/>
+    <rect x="81" y="40" width="8" height="6" rx="1"/>
+    <rect x="94" y="40" width="8" height="6" rx="1"/>
+    <rect x="107" y="40" width="8" height="6" rx="1"/>
+    <rect x="120" y="40" width="8" height="6" rx="1"/>
+    <rect x="133" y="40" width="8" height="6" rx="1"/>
+    <rect x="146" y="40" width="8" height="6" rx="1"/>
+    <rect x="159" y="40" width="8" height="6" rx="1"/>
+    <path d="M30 60h140M30 70h140"/>
+    <text x="100" y="89" fill="currentColor" stroke="none" font-family="JetBrains Mono" font-size="6" text-anchor="middle">BNG · 400 Gbps</text>
+  </svg>`,
+  il_switch_modern: `<svg viewBox="0 0 200 130" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="20" y="50" width="160" height="35" rx="2"/>
+    <g fill="currentColor"><circle cx="30" cy="57" r="1"/><circle cx="35" cy="57" r="1"/></g>
+    ${Array.from({length:24}, (_,i)=>`<rect x="${50+i*5.2}" y="55" width="4" height="6" rx="0.5"/>`).join('')}
+    ${Array.from({length:24}, (_,i)=>`<rect x="${50+i*5.2}" y="65" width="4" height="6" rx="0.5"/>`).join('')}
+    <text x="100" y="80" fill="currentColor" stroke="none" font-family="JetBrains Mono" font-size="6" text-anchor="middle">48 PORT · 100 GbE</text>
+  </svg>`,
+  il_dwdm: `<svg viewBox="0 0 200 130" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="40" y="40" width="120" height="50" rx="3"/>
+    <path d="M30 65h10M160 65h10"/>
+    <circle cx="28" cy="65" r="2"/>
+    <circle cx="172" cy="65" r="2"/>
+    <path d="M55 50l10 5l-10 5l10 5l-10 5l10 5"/>
+    <path d="M75 50l10 5l-10 5l10 5l-10 5l10 5" stroke="#a78bfa"/>
+    <path d="M95 50l10 5l-10 5l10 5l-10 5l10 5" stroke="#fbbf24"/>
+    <path d="M115 50l10 5l-10 5l10 5l-10 5l10 5" stroke="#f97316"/>
+    <text x="100" y="105" fill="currentColor" stroke="none" font-family="JetBrains Mono" font-size="6" text-anchor="middle">DWDM · 80 λ × 100G</text>
+  </svg>`,
+  il_olt_xgs: `<svg viewBox="0 0 200 130" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="30" y="15" width="140" height="100" rx="3"/>
+    <rect x="38" y="22" width="124" height="14" rx="1" stroke="#00d9ff"/>
+    <rect x="38" y="40" width="124" height="14" rx="1" stroke="#a78bfa"/>
+    <rect x="38" y="58" width="124" height="14" rx="1" stroke="#00d9ff"/>
+    <rect x="38" y="76" width="124" height="14" rx="1" stroke="#a78bfa"/>
+    <rect x="38" y="94" width="124" height="14" rx="1"/>
+    <text x="48" y="32" fill="#00d9ff" stroke="none" font-family="JetBrains Mono" font-size="5">GPON 2.5G</text>
+    <text x="48" y="50" fill="#a78bfa" stroke="none" font-family="JetBrains Mono" font-size="5">XGS-PON 10G</text>
+    <text x="48" y="68" fill="#00d9ff" stroke="none" font-family="JetBrains Mono" font-size="5">GPON 2.5G</text>
+    <text x="48" y="86" fill="#a78bfa" stroke="none" font-family="JetBrains Mono" font-size="5">XGS-PON 10G</text>
+    <text x="100" y="106" fill="currentColor" stroke="none" font-family="JetBrains Mono" font-size="5">COMBO OLT · WDM</text>
+  </svg>`,
+  il_ont_xgs: `<svg viewBox="0 0 200 130" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="50" y="35" width="100" height="60" rx="4"/>
+    <text x="100" y="55" fill="#a78bfa" stroke="none" font-family="JetBrains Mono" font-size="7" text-anchor="middle">ONT XGS-PON</text>
+    <text x="100" y="65" fill="currentColor" stroke="none" font-family="JetBrains Mono" font-size="5" text-anchor="middle">10 Gbps SIMÉTRICO</text>
+    <circle cx="62" cy="80" r="2" fill="currentColor"/>
+    <circle cx="72" cy="80" r="2" fill="currentColor"/>
+    <circle cx="82" cy="80" r="2" fill="currentColor"/>
+    <circle cx="92" cy="80" r="2" fill="#a78bfa"/>
+    <path d="M50 75h-15"/>
+    <circle cx="32" cy="75" r="2.5"/>
+    <rect x="120" y="83" width="14" height="7" rx="1"/>
+    <text x="127" y="89" fill="currentColor" stroke="none" font-family="JetBrains Mono" font-size="4" text-anchor="middle">10G</text>
+  </svg>`,
+  il_wifi6: `<svg viewBox="0 0 200 130" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="55" y="70" width="90" height="35" rx="3"/>
+    <text x="100" y="92" fill="currentColor" stroke="none" font-family="JetBrains Mono" font-size="7" text-anchor="middle">Wi-Fi 6E / 7</text>
+    <circle cx="70" cy="98" r="1" fill="currentColor"/>
+    <circle cx="78" cy="98" r="1" fill="currentColor"/>
+    <circle cx="86" cy="98" r="1" fill="currentColor"/>
+    <path d="M65 70V40M85 70V30M115 70V30M135 70V40"/>
+    <circle cx="65" cy="38" r="2"/>
+    <circle cx="85" cy="28" r="2"/>
+    <circle cx="115" cy="28" r="2"/>
+    <circle cx="135" cy="38" r="2"/>
+    <path d="M100 65a30 25 0 0 1 -30 -20M100 60a40 30 0 0 1 -45 -25M100 55a50 35 0 0 1 -55 -30" stroke-dasharray="2 2" stroke="#a78bfa"/>
+    <path d="M100 65a30 25 0 0 0 30 -20M100 60a40 30 0 0 0 45 -25M100 55a50 35 0 0 0 55 -30" stroke-dasharray="2 2" stroke="#a78bfa"/>
+  </svg>`,
+};
+
+/* =========================================================================
+   ARCHITECTURE DATA
+   ========================================================================= */
+
+const ARCHS = [
+  /* ============================================================ DIAL-UP */
+  {
+    id: 'dialup',
+    name: 'Dial-up',
+    period: '1990s — 2000s',
+    speed: 'até 56 kbps',
+    medium: 'Linha telefônica (PSTN)',
+    overview: 'A primeira massificação da internet residencial. Usava a linha telefônica comum: enquanto você estava conectado, ninguém podia ligar para casa (e a ligação local custava por minuto). Aquele barulho icônico ao conectar é o modem "negociando" com o servidor do outro lado.',
+    nodes: [
+      {
+        loc: '01 · Origem', name: 'Internet', role: 'a rede em sua infância', icon: 'ic_globe', illust: 'il_internet',
+        desc: 'A internet dos anos 90 ainda era muito menor — sites estáticos, e-mail, IRC, Usenet, ICQ. Os provedores brasileiros (UOL, BOL, Terra, IG, ZAZ) acessavam o backbone via Embratel, RNP ou ANSP.',
+        specs: [['Backbones BR', 'Embratel, RNP, ANSP'], ['Aplicações típicas', 'HTML 3.2, IRC, e-mail POP3, FTP']],
+        analogy: 'Uma cidade pequena: poucas casas, ruas estreitas, todo mundo se conhecia.',
+        link: 'fiber'
+      },
+      {
+        loc: '02 · Central do provedor', name: 'Roteador', role: 'a saída para o mundo', icon: 'ic_router', illust: 'il_router_classic',
+        desc: 'Roteador (geralmente Cisco 2500 ou similar) que ligava o RAS ao link de uplink do provedor. Como IPs públicos eram caros e escassos, fazia NAT para todos os clientes saírem com poucos endereços IP.',
+        specs: [['Equipamento típico', 'Cisco 2500, 7000'], ['Função', 'Roteamento + NAT + filtros básicos']],
+        analogy: 'A porta da frente do provedor — todo mundo passava por ali para sair.',
+        link: 'fiber'
+      },
+      {
+        loc: '03 · Central do provedor', name: 'RAS', role: 'o banco de modems', icon: 'ic_ras', illust: 'il_ras',
+        desc: '<p><strong>Remote Access Server</strong> — um equipamento enorme com dezenas ou centenas de modems internos. Cada cliente conectado <em>ocupava 1 modem físico dedicado</em>. Por isso o famoso "sinal de ocupado": quando todos os modems estavam em uso, o próximo a discar não conseguia conectar.</p><p>Após atender, o RAS autenticava o usuário via PPP (login e senha) e roteava o tráfego.</p>',
+        specs: [['Equipamentos típicos', 'Cisco AS5300, Ascend MAX, Livingston Portmaster'], ['Densidade', '24 a 480 portas por chassi'], ['Protocolo', 'PPP sobre canal V.90/V.92']],
+        analogy: 'Uma central de atendimento com várias linhas: cada cliente ocupa uma "atendente" (modem) dedicada. Se todas estão ocupadas, dá ocupado.',
+        link: 'copper'
+      },
+      {
+        loc: '04 · Operadora de telefonia', name: 'Central Telefônica', role: 'a comutação por circuito', icon: 'ic_central', illust: 'il_central',
+        desc: '<p>A central da <strong>operadora de telefonia</strong> (não do provedor!) recebia a ligação do cliente e a roteava até o número do provedor. Eram centrais Class 5 — comutação por circuitos, baseadas em sistemas como AXE, EWSD, 5ESS.</p><p>Durante toda a conexão, um circuito físico ficava reservado entre sua casa e o RAS do provedor.</p>',
+        specs: [['Tecnologia', 'Comutação por circuitos (TDM)'], ['Sistemas comuns', 'Ericsson AXE, Siemens EWSD, Lucent 5ESS']],
+        analogy: 'A telefonista (automatizada) que conecta sua chamada ao destino e mantém a linha aberta enquanto vocês conversam.',
+        link: 'copper'
+      },
+      {
+        loc: '05 · Rua', name: 'Par de Cobre', role: 'a estrada de cobre', icon: 'ic_wire', illust: 'il_phoneline',
+        desc: 'Linha telefônica comum (PSTN). O mesmo par de fios de cobre usado para chamadas de voz, ocupando o canal inteiro de 4 kHz durante a conexão. A velocidade máxima de 56 kbps é uma <em>consequência matemática</em> dessa largura de banda (Teorema de Shannon).',
+        specs: [['Largura de banda', '0 a 4 kHz (canal de voz)'], ['Limite teórico', '~56 kbps (Lei de Shannon)']],
+        analogy: 'Uma estrada de mão única: serve para carros (voz) ou mensageiros (dados), mas não ao mesmo tempo.',
+        link: 'copper'
+      },
+      {
+        loc: '06 · Casa', name: 'Modem 56k', role: 'o tradutor analógico', icon: 'ic_modem', illust: 'il_modem56k',
+        desc: '<p>Converte dados digitais do computador em <strong>sinais sonoros</strong> que viajam pela linha telefônica. O nome MODEM vem de <em>MOdulator-DEModulator</em>.</p><p>Aquele barulho do "tssss... krrrr... shhhh..." ao conectar é o <strong>handshake</strong>: os dois modems negociando qual velocidade e qual modulação usar baseado na qualidade da linha.</p>',
+        specs: [['Padrão final', 'V.90 (1998) / V.92 (2000)'], ['Velocidade', '56 kbps down / 33,6 kbps up'], ['Interface PC', 'Serial RS-232 ou ISA/PCI interno']],
+        analogy: 'Um tradutor simultâneo: pega dados em "língua de computador" e fala em "língua de telefone" para o outro lado entender.',
+        link: 'copper'
+      },
+      {
+        loc: '07 · Casa', name: 'PC do Usuário', role: 'o destino final', icon: 'ic_pc', illust: 'il_pc',
+        desc: 'Computador rodando Windows 95/98/Me, geralmente com o "Acesso à Rede Dial-Up" configurado para discar para o número 0300 do provedor. Browsers comuns: Netscape Navigator, Internet Explorer.',
+        specs: [['SO típico', 'Windows 95/98, Mac OS 8/9'], ['Browser', 'Netscape, IE 5/6']],
+        analogy: 'Você do lado de cá da linha, esperando os bits chegarem em fila indiana.',
+      }
+    ]
+  },
+
+  /* ============================================================ ADSL */
+  {
+    id: 'adsl',
+    name: 'ADSL / xDSL',
+    period: 'final dos 1990s — 2010s',
+    speed: '256 kbps a 100 Mbps',
+    medium: 'Par de cobre (alta frequência)',
+    overview: 'A primeira "banda larga" de massa no Brasil (Speedy, Velox, BrTurbo). Reaproveita a mesma linha telefônica do dial-up, mas usa frequências altas (acima de 25 kHz) que <em>não interferem</em> na voz. Por isso você podia falar no telefone e estar conectado ao mesmo tempo.',
+    nodes: [
+      {
+        loc: '01 · Origem', name: 'Internet', role: 'o backbone IP', icon: 'ic_globe', illust: 'il_internet',
+        desc: 'O provedor passa a ter trânsito IP via fibra/ATM. Surge o conceito de PTT (Ponto de Troca de Tráfego) — no Brasil, o PTT-Metro / IX.br.',
+        specs: [['Trânsito', 'IP via STM-1, STM-4'], ['Peering', 'PTT-Metro / IX.br']],
+        analogy: 'A cidade cresceu, ganhou avenidas largas e um sistema de viaduto.',
+        link: 'fiber'
+      },
+      {
+        loc: '02 · Central do provedor', name: 'Roteador', role: 'a borda do provedor', icon: 'ic_router', illust: 'il_router_classic',
+        desc: 'Roteador de borda (Cisco 7200, 7600, Juniper M-series) que conecta o BRAS ao link de internet do provedor. Executa BGP com outros provedores.',
+        specs: [['Equipamentos', 'Cisco 7200/7600, Juniper M10/M40'], ['Protocolos', 'BGP, OSPF, MPLS']],
+        analogy: 'O portão principal da cidade — todos os caminhos passam por ele.',
+        link: 'fiber'
+      },
+      {
+        loc: '03 · Central do provedor', name: 'BRAS', role: 'o autenticador', icon: 'ic_ras', illust: 'il_bras',
+        desc: '<p><strong>Broadband Remote Access Server</strong> — equivalente "moderno" do RAS, mas para banda larga. Faz a autenticação PPPoE de cada cliente (login e senha), distribui IP, controla velocidade contratada e aplica políticas de QoS.</p><p>É exatamente o mesmo conceito de <strong>BNG</strong> que aparece nas redes GPON modernas — só muda o nome.</p>',
+        specs: [['Equipamentos', 'Cisco 7200/10000, Juniper E-series, Redback SmartEdge'], ['Protocolo', 'PPPoE (RFC 2516)'], ['Função', 'AAA + IP pool + Rate limit']],
+        analogy: 'A portaria do prédio que confere quem é você (login/senha) e libera o consumo que você contratou.',
+        link: 'fiber'
+      },
+      {
+        loc: '04 · Central da operadora', name: 'DSLAM', role: 'o concentrador de DSL', icon: 'ic_dslam', illust: 'il_dslam',
+        desc: '<p><strong>Digital Subscriber Line Access Multiplexer</strong> — o equipamento mais importante do mundo ADSL. Fica na central da operadora de telefonia e recebe os pares de cobre de centenas (ou milhares) de clientes.</p><p>Para cada par de cobre, ele <strong>demodula</strong> o sinal DSL (que veio em alta frequência) e <strong>agrega</strong> todos os clientes em um único link de uplink (ATM nos anos 2000, Ethernet/GbE depois) que segue para o BRAS.</p><p>É essencialmente uma <em>"OLT do mundo do cobre"</em>.</p>',
+        specs: [['Padrões', 'ADSL, ADSL2+, VDSL2'], ['Densidade típica', '24 a 1024 portas por chassi'], ['Uplink', 'ATM (E3/STM-1) ou Ethernet (GbE)'], ['Fabricantes', 'Alcatel-Lucent, Huawei, ZTE, ECI']],
+        analogy: 'Um maestro: cada cliente é um instrumento (par de cobre) e o DSLAM reúne tudo numa "sinfonia" que segue como um único fluxo para o resto da rede.',
+        link: 'copper'
+      },
+      {
+        loc: '05 · Casa', name: 'Splitter de Voz', role: 'o separador voz/dados', icon: 'ic_switch', illust: 'il_microfilter',
+        desc: '<p>Pequeno filtro instalado na tomada do telefone. Separa o sinal de <strong>voz</strong> (baixa frequência, 0–4 kHz) do sinal de <strong>dados</strong> (alta frequência, acima de 25 kHz). É a "mágica" que permite usar telefone e internet simultaneamente.</p><p>Pode aparecer em duas formas: <em>microfilter</em> em cada telefone, ou um <em>splitter central</em> instalado logo na entrada da linha.</p>',
+        specs: [['Banda de voz', '0 — 4 kHz'], ['Banda de dados', '25 kHz — 2,2 MHz (VDSL2)']],
+        analogy: 'Um divisor que separa água quente (voz) de água fria (dados) — ambas usam o mesmo cano sem se misturarem.',
+        link: 'copper'
+      },
+      {
+        loc: '06 · Casa', name: 'Modem ADSL', role: 'o tradutor de alta frequência', icon: 'ic_modem', illust: 'il_adsl_modem',
+        desc: '<p>Equipamento na casa do cliente, geralmente combinado com roteador e Wi-Fi (modem-router). Conecta-se ao par de cobre e demodula o sinal DSL para entregar Ethernet/Wi-Fi.</p><p>É ele que executa o cliente PPPoE — abre uma sessão autenticada com o BRAS usando o login e senha do provedor.</p>',
+        specs: [['Padrões', 'ADSL (8M↓/1M↑), ADSL2+ (24M↓/3M↑), VDSL2 (100M↓/40M↑)'], ['Distância', 'Velocidade cai com distância do DSLAM'], ['Limite prático', '~5 km (ADSL2+), ~1,5 km (VDSL2)']],
+        analogy: 'O modem 56k crescido e malhado: mesma ideia (modular dados na linha telefônica), mas em frequências muito mais altas, sem atrapalhar a voz.',
+        link: 'fiber'
+      },
+      {
+        loc: '07 · Casa', name: 'Dispositivos', role: 'os clientes finais', icon: 'ic_devices', illust: 'il_devices',
+        desc: 'Computadores, notebooks (e, no fim da era ADSL, smartphones) conectados ao modem-router por Ethernet ou Wi-Fi 802.11 b/g/n.',
+        specs: [['Wi-Fi típico', '802.11g (54 Mbps), 802.11n (até 300 Mbps)']],
+        analogy: 'Os moradores da casa finalmente podem usar a internet sem ocupar a linha do telefone.',
+      }
+    ]
+  },
+
+  /* ============================================================ HFC / DOCSIS */
+  {
+    id: 'hfc',
+    name: 'HFC / Cable',
+    period: '1990s — atual',
+    speed: '10 Mbps a 10 Gbps',
+    medium: 'Híbrido Fibra-Coaxial',
+    overview: 'Tecnologia das operadoras de TV a cabo (NET/Claro, Sky no passado). Aproveita a infraestrutura coaxial já instalada para TV: leva fibra até um ponto da rua (<em>Fiber Node</em>) e do nó até a casa segue por cabo coaxial. O protocolo é o <strong>DOCSIS</strong>, que evolui constantemente.',
+    nodes: [
+      {
+        loc: '01 · Origem', name: 'Internet', role: 'o backbone IP', icon: 'ic_globe', illust: 'il_internet',
+        desc: 'Mesma internet de qualquer ISP moderno, com peering em PTTs (IX.br no Brasil) e trânsito IP via fibra de alta capacidade.',
+        analogy: 'A nuvem de sempre — mas o caminho até a sua casa é bem diferente.',
+        link: 'fiber'
+      },
+      {
+        loc: '02 · Headend', name: 'Concentrador', role: 'o BNG da operadora', icon: 'ic_router', illust: 'il_bng_modern',
+        desc: 'Roteador de núcleo / BNG da operadora. Faz o roteamento entre o CMTS e o link de internet, aplica políticas de QoS e segurança.',
+        specs: [['Equipamentos típicos', 'Cisco ASR9000, Juniper MX, Nokia 7750']],
+        analogy: 'O cérebro da operação no datacenter da operadora.',
+        link: 'fiber'
+      },
+      {
+        loc: '03 · Headend', name: 'CMTS', role: 'a OLT do mundo do cabo', icon: 'ic_cmts', illust: 'il_cmts',
+        desc: '<p><strong>Cable Modem Termination System</strong> — o equipamento mais importante da arquitetura HFC. Fica na <em>headend</em> (a central da operadora de cabo) e gerencia <strong>todos os cable modems</strong> da região.</p><p>Faz exatamente a função equivalente a uma OLT no FTTH ou a um DSLAM no ADSL: termina o protocolo de acesso (DOCSIS), demodula os sinais que vêm do coaxial, gerencia autenticação e provisionamento de cada modem.</p><p>O CMTS moderno é um equipamento gigantesco, com dezenas de line cards, cada uma gerenciando centenas de modems.</p>',
+        specs: [['Padrões DOCSIS', '1.0 (1997), 2.0, 3.0, 3.1, 4.0 (2020)'], ['Velocidades', '40 Mbps (1.0) a 10 Gbps↓/6 Gbps↑ (4.0)'], ['Modulação', 'QAM-64 / QAM-256 / OFDM(A)'], ['Equipamentos', 'Cisco uBR/cBR-8, Casa Systems C100G, Arris E6000']],
+        analogy: 'O maestro da orquestra coaxial: cada cable modem é um músico que só toca quando o CMTS deixa.',
+        link: 'fiber'
+      },
+      {
+        loc: '04 · Rua', name: 'Nó Óptico', role: 'a conversão fibra → coaxial', icon: 'ic_node', illust: 'il_fiber_node',
+        desc: '<p>Equipamento outdoor (geralmente em poste ou armário de rua) que converte o sinal óptico vindo da fibra do CMTS em sinal elétrico de rádio-frequência (RF) que será enviado pelo cabo coaxial até as casas.</p><p>É o que faz a arquitetura ser <strong>híbrida</strong>: <em>Hybrid Fiber-Coaxial</em>. Fibra do CMTS até o nó, coaxial do nó até a casa.</p><p>Um único nó óptico costuma servir entre 100 e 2000 residências, dependendo da densidade da rede.</p>',
+        specs: [['Conversão', 'Óptico (1310/1550 nm) ↔ RF (5–1218 MHz)'], ['Service Group', '100 a 2000 residências por nó']],
+        analogy: 'Um conversor de moedas no aeroporto: pega o sinal em "moeda óptica" e devolve em "moeda elétrica" para a viagem final.',
+        link: 'copper'
+      },
+      {
+        loc: '05 · Rua', name: 'Amplificador', role: 'o reforço de sinal', icon: 'ic_amp', illust: 'il_amp',
+        desc: '<p>O cabo coaxial perde sinal a cada metro percorrido — quanto maior a frequência, maior a perda. Para sinais DOCSIS que chegam a 1,2 GHz, a atenuação é alta.</p><p>A cada certa distância no <em>trunk</em> (cabo principal), um <strong>amplificador</strong> de RF reforça o sinal. Cada amp adiciona algum ruído, então a quantidade em cascata é limitada (geralmente até 4–6 amplificadores depois do nó óptico).</p>',
+        specs: [['Banda', '5 — 1218 MHz (DOCSIS 3.1)'], ['Alimentação', '60-90 V AC injetados no próprio coaxial']],
+        analogy: 'Os reforços de sinal numa estrada longa — sem eles, a "voz" do CMTS chegaria muito fraca na sua casa.',
+        link: 'copper'
+      },
+      {
+        loc: '06 · Poste', name: 'Tap', role: 'o derivador coaxial', icon: 'ic_tap', illust: 'il_tap',
+        desc: '<p>Pequeno derivador no poste que conecta vários clientes a um único <em>trunk</em> coaxial principal. Funciona como um "splitter coaxial" externo, mas com perdas calculadas por engenheiros — cada saída tem uma atenuação específica para que todos os clientes recebam aproximadamente o mesmo nível de sinal.</p><p>O cabo que vai do tap até a sua casa é chamado de <strong>drop</strong>.</p>',
+        specs: [['Saídas típicas', '2, 4 ou 8 por tap'], ['Atenuação', '11, 14, 17, 20, 23, 26 dB (decresce conforme a distância do nó)']],
+        analogy: 'A torneirinha que cada casa tem ligada na tubulação principal da rua.',
+        link: 'copper'
+      },
+      {
+        loc: '07 · Casa', name: 'Cable Modem', role: 'o tradutor coaxial', icon: 'ic_coax', illust: 'il_cable_modem',
+        desc: '<p>Equipamento na casa do cliente. Conecta-se ao cabo coaxial (mesmo cabo da TV a cabo, geralmente RG-6) e converte os sinais DOCSIS em Ethernet.</p><p>O modem registra-se no CMTS via DHCP, recebe arquivo de configuração e fica subordinado a ele para tudo: velocidade, autenticação, atualizações de firmware.</p><p>Os modems modernos (DOCSIS 3.1) já vêm com Wi-Fi 6 integrado e podem entregar gigabits.</p>',
+        specs: [['Conector', 'F (rosqueado)'], ['Fabricantes', 'Arris, Technicolor, Motorola, Hitron'], ['Provisão', 'DHCP + TFTP (config file)']],
+        analogy: 'Como a ONU do mundo coaxial: recebe o sinal da rua e traduz para Wi-Fi/Ethernet dentro de casa.',
+      }
+    ]
+  },
+
+  /* ============================================================ WISP */
+  {
+    id: 'wisp',
+    name: 'Rádio / WISP',
+    period: 'meados 2000s — atual',
+    speed: '5 Mbps a 1 Gbps',
+    medium: 'Enlaces de rádio (5 / 6 / 60 GHz)',
+    overview: 'A arquitetura que <strong>conectou o interior do Brasil</strong>. Pequenos provedores usam torres com antenas setoriais e CPE (antena outdoor) nos clientes para distribuir internet sem precisar instalar cabo. Foi a base de milhares de provedores regionais brasileiros antes da popularização do FTTH.',
+    nodes: [
+      {
+        loc: '01 · Origem', name: 'Internet', role: 'o backbone IP', icon: 'ic_globe', illust: 'il_internet',
+        desc: 'Trânsito IP geralmente comprado de uma operadora maior ou de um provedor regional. WISPs medianos têm também peering em PTTs (IX.br).',
+        analogy: 'A fonte de tudo, lá longe na capital.',
+        link: 'fiber'
+      },
+      {
+        loc: '02 · POP do provedor', name: 'Concentrador', role: 'o BRAS do WISP', icon: 'ic_router', illust: 'il_bras',
+        desc: '<p>Em provedores menores, costuma ser um <strong>Mikrotik CCR</strong> ou <strong>Routerboard</strong> rodando RouterOS — equipamento muito popular no mercado WISP brasileiro pela combinação preço/capacidade.</p><p>Faz PPPoE, controle de banda, NAT (frequentemente CGNAT), filas, BGP. Em provedores maiores, equipamentos Cisco, Juniper ou Huawei.</p>',
+        specs: [['Equipamentos típicos', 'Mikrotik CCR1036/2004, Cisco ASR, Juniper MX'], ['Software comum', 'MikroTik RouterOS, VyOS, Huawei VRP']],
+        analogy: 'O cérebro do POP: faz quase tudo (roteamento, autenticação, controle).',
+        link: 'fiber'
+      },
+      {
+        loc: '03 · POP do provedor', name: 'Switch / Roteador', role: 'a agregação', icon: 'ic_switch', illust: 'il_switch_modern',
+        desc: 'Switch L2/L3 que agrega os links das torres (backhauls) e conecta ao concentrador. Em redes maiores, com VLANs por torre e MPLS entre POPs.',
+        specs: [['Equipamentos típicos', 'Mikrotik CRS, Cisco Catalyst, Huawei S-series']],
+        analogy: 'O painel de distribuição que organiza quem fala com quem dentro do POP.',
+        link: 'fiber'
+      },
+      {
+        loc: '04 · Backhaul', name: 'Enlace PtP', role: 'a ponte entre torres', icon: 'ic_radio', illust: 'il_ptp',
+        desc: '<p><strong>Point-to-Point</strong> — enlace de rádio dedicado entre o POP e a torre, ou entre torres. Usa frequências altas (24 GHz, 60 GHz, 80 GHz) ou licenciadas, com antenas parabólicas direcionais.</p><p>Alternativa moderna e cada vez mais comum: <strong>backhaul por fibra óptica</strong> direto até a torre — mais estável, maior capacidade, sem dependência do tempo.</p>',
+        specs: [['Faixas comuns', '5, 11, 18, 24, 60, 80 GHz'], ['Capacidade', '100 Mbps a 10 Gbps'], ['Fabricantes', 'Ubiquiti airFiber, Cambium PTP, Mimosa, Aviat']],
+        analogy: 'Uma ponte aérea entre dois prédios distantes: você não vê a ponte, mas o tráfego passa por ela.',
+        link: 'radio'
+      },
+      {
+        loc: '05 · Torre do provedor', name: 'Antena Setorial', role: 'o emissor para vários clientes', icon: 'ic_sectoral', illust: 'il_sectoral',
+        desc: '<p>Antena de cobertura setorial (60°, 90° ou 120°) instalada no topo da torre. Um único <em>AP setorial</em> atende dezenas (ou centenas) de CPEs dentro de sua área de cobertura.</p><p>Geralmente uma torre tem 3 ou 4 setoriais cobrindo 360° ao redor. Tecnologias comuns: <strong>airMAX/airFiber</strong> (Ubiquiti), <strong>ePMP/PMP</strong> (Cambium), <strong>Mimosa</strong>, <strong>LigoWave</strong>.</p>',
+        specs: [['Faixas comuns', '2.4, 5, 5.8 GHz (não-licenciadas); 24, 60 GHz'], ['Modulação', 'TDMA proprietário, OFDM'], ['Setores típicos por torre', '3 a 6']],
+        analogy: 'Um farol setorizado: ilumina uma fatia do círculo ao redor da torre e conversa com cada cliente naquele setor.',
+        link: 'radio'
+      },
+      {
+        loc: '06 · Telhado do cliente', name: 'CPE', role: 'a antena do cliente', icon: 'ic_dish', illust: 'il_cpe_wireless',
+        desc: '<p><strong>Customer Premises Equipment</strong> — pequena antena outdoor (formato "pirulito", disco ou painel) instalada no telhado/poste do cliente, <strong>apontada para a torre do provedor</strong>.</p><p>Recebe alimentação por <strong>PoE</strong> (Power over Ethernet) — o mesmo cabo de rede que carrega os dados leva também a energia, vinda de uma fonte injetora dentro da casa.</p><p>Modelos icônicos: Ubiquiti LiteBeam, NanoBeam, LocoM, Mikrotik SXT, Cambium Force.</p>',
+        specs: [['Fabricantes', 'Ubiquiti, Mikrotik, Cambium, TP-Link Pharos'], ['Frequências', '5 / 5.8 GHz (mais comum), 24 / 60 GHz (recente)'], ['Alimentação', 'PoE 24V ou 48V passivo']],
+        analogy: 'A "antena de TV" 2.0: aponta para a torre certa e capta o sinal de internet sem fio com fio nenhum no meio.',
+        link: 'fiber'
+      },
+      {
+        loc: '07 · Casa', name: 'Roteador + Devices', role: 'o Wi-Fi interno', icon: 'ic_wifi6', illust: 'il_wifi6',
+        desc: 'Roteador comum dentro da casa do cliente, ligado por cabo Ethernet ao injector PoE do CPE. Distribui Wi-Fi para os dispositivos.',
+        specs: [['Wi-Fi típico', '802.11ac (Wi-Fi 5), 802.11ax (Wi-Fi 6)']],
+        analogy: 'O Wi-Fi de sempre — só que o "fio" que entra na casa é, na verdade, uma onda de rádio.',
+      }
+    ]
+  },
+
+  /* ============================================================ GPON */
+  {
+    id: 'gpon',
+    name: 'FTTH GPON',
+    period: '2010s — atual',
+    speed: '2,5 Gbps↓ / 1,25 Gbps↑',
+    medium: 'Fibra óptica (1490 / 1310 nm)',
+    overview: 'A arquitetura <em>padrão atual</em> de banda larga residencial. Leva fibra óptica de verdade até dentro da casa do cliente (<em>Fiber To The Home</em>). Usa equipamentos passivos (splitters) na rua para dividir o sinal, dispensando energia entre a central e o cliente — daí o nome <strong>P</strong>assive <strong>O</strong>ptical <strong>N</strong>etwork.',
+    nodes: [
+      {
+        loc: '01 · Origem', name: 'Internet', role: 'o backbone mundial', icon: 'ic_globe', illust: 'il_internet',
+        desc: 'Trânsito IP via fibra de alta capacidade, peering em PTTs (IX.br) e CDNs locais (Google GGC, Netflix OCA, Cloudflare).',
+        specs: [['Trânsito típico', 'Múltiplos uplinks de 10/100 GbE'], ['CDNs locais', 'Google GGC, Netflix OCA, Akamai, Cloudflare']],
+        analogy: 'A nuvem global — agora chegando até o provedor por canos bem mais largos.',
+        link: 'fiber'
+      },
+      {
+        loc: '02 · Central do provedor', name: 'Concentrador', role: 'o cérebro do provedor', icon: 'ic_router', illust: 'il_bng_modern',
+        desc: '<p>Também chamado tecnicamente de <strong>BNG</strong> (Broadband Network Gateway) ou <strong>BRAS</strong>. É o equipamento mais importante da central do ponto de vista de gestão de clientes.</p><p>Autentica os clientes (PPPoE ou IPoE), distribui IP (incluindo CGNAT), controla velocidade contratada e faz roteamento entre a internet e a rede do provedor.</p>',
+        specs: [['Equipamentos', 'Cisco ASR9000, Juniper MX, Nokia 7750, Huawei NE40'], ['Capacidade', 'Múltiplos Tbps por chassi'], ['Funções', 'AAA, BGP, MPLS, CGNAT, QoS']],
+        analogy: 'Portaria + hidrômetro do prédio: identifica quem entra, mede o consumo e libera a "água" (banda) contratada.',
+        link: 'fiber'
+      },
+      {
+        loc: '03 · Central do provedor', name: 'Switch', role: 'a distribuição interna', icon: 'ic_switch', illust: 'il_switch_modern',
+        desc: 'Switch L2/L3 de agregação dentro da central, conectando concentrador, OLTs, servidores e roteadores. Trabalha com endereços MAC e VLANs — não com fibra de cliente.',
+        specs: [['Velocidades', '10 / 25 / 40 / 100 GbE'], ['Fabricantes', 'Cisco, Juniper, Huawei, Arista, Mellanox']],
+        analogy: 'O quadro de patch da central: liga uma peça na outra de forma organizada.',
+        link: 'fiber'
+      },
+      {
+        loc: '04 · Central do provedor', name: 'OLT', role: 'a estação óptica', icon: 'ic_olt', illust: 'il_olt',
+        desc: '<p><strong>Optical Line Terminal</strong> — o equipamento de fibra mais importante da central. Converte sinal elétrico em luz (laser de 1490 nm para descida, recebe 1310 nm na subida) e gerencia <strong>todas</strong> as conexões de fibra dos clientes.</p><p>Cada porta PON da OLT alimenta um splitter — e cada porta atende tipicamente 32, 64 ou até 128 clientes (dependendo do nível de divisão).</p>',
+        specs: [['Padrão', 'ITU-T G.984 (GPON)'], ['Velocidade', '2,488 Gbps↓ / 1,244 Gbps↑ <em>compartilhados</em>'], ['Comprimentos de onda', '1490 nm (down) / 1310 nm (up)'], ['Split máximo', '1:128 por porta PON'], ['Fabricantes', 'Huawei MA5800, ZTE C620/C650, Nokia 7360, Fiberhome']],
+        analogy: 'Estação central de correios óptica: pega tudo que precisa ser entregue e envia em pulsos de luz pela fibra.',
+        link: 'passive'
+      },
+      {
+        loc: '05 · Poste / CTO', name: 'Splitter', role: 'o divisor passivo', icon: 'ic_split', illust: 'il_splitter',
+        desc: '<p>Também chamado de <strong>Divisor Óptico</strong>. Componente <strong>passivo</strong> — não tem energia, não tem eletrônica, não dá defeito eletrônico, não trava. É só óptica pura.</p><p>Pega 1 fibra que vem da OLT e divide em 8, 16, 32 ou 64 fibras para os clientes. Fica geralmente no poste, dentro de uma <strong>CTO</strong> (Caixa de Terminação Óptica).</p><p>A divisão tem um custo: cada vez que divide por 2, perde metade do sinal (3 dB). Por isso o número de saídas é limitado pelo "budget óptico" da OLT.</p>',
+        specs: [['Tecnologia', 'PLC (Planar Lightwave Circuit) ou Fused Biconical Taper'], ['Divisões comuns', '1:2, 1:4, 1:8, 1:16, 1:32, 1:64'], ['Atenuação 1:32', '~17,5 dB'], ['Vida útil', 'Décadas (sem partes móveis nem eletrônica)']],
+        analogy: 'Um prisma óptico: um feixe de luz entra, vários saem. Sem energia, sem partes móveis, sem complicação.',
+        link: 'fiber'
+      },
+      {
+        loc: '06 · Casa', name: 'ONU / ONT', role: 'o tradutor da casa', icon: 'ic_onu', illust: 'il_onu',
+        desc: '<p><strong>Optical Network Unit / Terminal</strong> — o aparelhinho que fica na casa do cliente. Recebe a luz pela fibra e converte de volta em sinal elétrico (Ethernet/Wi-Fi).</p><p>Cada ONU tem um <strong>SN</strong> (Serial Number) único de fábrica que é registrado na OLT — é assim que o provedor sabe qual ONU é qual cliente, mesmo todas estando no mesmo "barramento" óptico.</p><p>ONUs modernas já vêm com Wi-Fi 5/6 integrado e várias portas LAN.</p>',
+        specs: [['Diferença ONU vs ONT', 'Técnica (ONU = unit, ONT = terminal). Na prática, o mesmo aparelho.'], ['Conector', 'SC/APC (azul ou verde)'], ['Fabricantes', 'Huawei, Nokia, ZTE, Intelbras, Fiberhome']],
+        analogy: 'Caixa de correio da casa: recebe a entrega em "luz" e traduz para um formato que os aparelhos da casa entendem.',
+        link: 'fiber'
+      },
+      {
+        loc: '07 · Casa', name: 'Dispositivos', role: 'os clientes finais', icon: 'ic_devices', illust: 'il_devices',
+        desc: 'Computadores, celulares, smart TVs, consoles — qualquer coisa que se conecte por Wi-Fi ou cabo de rede à ONU. Tipicamente Wi-Fi 5 (802.11ac) ou Wi-Fi 6 (802.11ax).',
+        specs: [['Wi-Fi típico', '802.11ac / 802.11ax']],
+        analogy: 'A torneira aberta: o sinal viajou da fonte global até o seu copo.',
+      }
+    ]
+  },
+
+  /* ============================================================ XGS-PON */
+  {
+    id: 'xgspon',
+    name: 'XGS-PON',
+    period: '2020s — atual',
+    speed: '10 Gbps simétrico',
+    medium: 'Fibra óptica (1577 / 1270 nm)',
+    overview: 'A próxima geração do FTTH, já em implantação ampla. <strong>10 Gbps simétricos</strong> por porta PON e — o melhor — usa as mesmas fibras e splitters do GPON, coexistindo na mesma rede via <em>WDM</em> (comprimentos de onda diferentes). O provedor só precisa trocar as line cards da OLT e a ONT do cliente.',
+    nodes: [
+      {
+        loc: '01 · Origem', name: 'Internet + DWDM', role: 'o backbone óptico', icon: 'ic_dwdm', illust: 'il_dwdm',
+        desc: '<p>Com XGS-PON entregando 10 Gbps na ponta, o backbone do provedor precisa de muito mais capacidade. Entra o <strong>DWDM</strong> (Dense Wavelength Division Multiplexing): múltiplos comprimentos de onda na mesma fibra, cada um carregando 100 ou 400 Gbps.</p><p>Uma única fibra DWDM pode carregar 80 ou mais "cores" simultaneamente — alguns Tbps no total.</p>',
+        specs: [['Capacidade típica', '80 × 100 Gbps por fibra (8 Tbps)'], ['Sistemas', 'Coherent 400G ZR / ZR+, Ciena, Infinera']],
+        analogy: 'Uma rodovia com 80 faixas paralelas — cada faixa transporta uma "cor" de luz diferente.',
+        link: 'fiber'
+      },
+      {
+        loc: '02 · Central do provedor', name: 'BNG 400G', role: 'o concentrador de alta capacidade', icon: 'ic_router', illust: 'il_bng_modern',
+        desc: 'O concentrador (BNG) precisa acompanhar — porta de uplink de 400 GbE, capacidade interna de múltiplos Tbps. Mesma função de sempre (autenticação, IP, QoS), mas em escala muito maior.',
+        specs: [['Equipamentos', 'Cisco ASR9000-X, Juniper MX10K, Nokia FP5'], ['Capacidade', '12,8 a 28,8 Tbps por chassi']],
+        analogy: 'O mesmo concentrador do GPON, só que com o "salário" muito maior — precisa dar conta de 10× mais tráfego.',
+        link: 'fiber'
+      },
+      {
+        loc: '03 · Central do provedor', name: 'Switch 100G', role: 'agregação 100/400 GbE', icon: 'ic_switch', illust: 'il_switch_modern',
+        desc: 'Switches de agregação com portas 100/400 GbE para conectar as OLTs XGS-PON ao núcleo. Em redes modernas, também usam SR-MPLS / SRv6.',
+        specs: [['Velocidades', '100 / 200 / 400 GbE'], ['Buffer', 'Crítico para 10G de cliente final']],
+        analogy: 'O distribuidor interno, agora em "modo turbo".',
+        link: 'fiber'
+      },
+      {
+        loc: '04 · Central do provedor', name: 'OLT Combo', role: 'GPON + XGS-PON na mesma porta', icon: 'ic_olt', illust: 'il_olt_xgs',
+        desc: '<p>A OLT moderna geralmente é <strong>combo</strong>: a mesma porta PON entrega GPON (2,5G) <em>e</em> XGS-PON (10G) <strong>simultaneamente</strong>. Como? Usando <strong>WDM</strong>: comprimentos de onda diferentes.</p><p>O GPON usa 1490 nm na descida; o XGS-PON usa 1577 nm. Como são "cores" diferentes da luz, não interferem — passam pelo mesmo splitter e pela mesma fibra. A ONT GPON enxerga só o sinal GPON; a ONT XGS-PON enxerga só o XGS-PON.</p><p>Isso permite ao provedor <em>migrar clientes individualmente</em> para 10G sem trocar nada na infraestrutura externa.</p>',
+        specs: [['Padrão', 'ITU-T G.9807.1 (XGS-PON)'], ['Velocidade', '9,953 Gbps↓ / 9,953 Gbps↑ <em>simétrico</em>'], ['Comprimentos de onda', '1577 nm (down) / 1270 nm (up)'], ['Coexistência', 'GPON + XGS-PON na mesma fibra via WDM'], ['Fabricantes', 'Huawei MA5800-X17, Nokia FX, ZTE C650']],
+        analogy: 'Como duas estações de rádio na mesma antena: 91,5 FM e 105,7 FM não atrapalham uma à outra. Aqui é a mesma coisa, mas com "cores" de luz em vez de frequências de rádio.',
+        link: 'passive'
+      },
+      {
+        loc: '05 · Poste / CTO', name: 'Splitter', role: 'o mesmo divisor passivo', icon: 'ic_split', illust: 'il_splitter',
+        desc: '<p>A grande sacada do XGS-PON: o <strong>splitter é o mesmo do GPON</strong>. Por ser um componente passivo e óptico puro, ele simplesmente passa qualquer comprimento de onda dentro de sua faixa de operação (1260–1625 nm).</p><p>Por isso a migração para XGS-PON não exige tocar em nada na rua. Custo gigante economizado.</p>',
+        specs: [['Resposta espectral', '1260 a 1625 nm (cobre GPON e XGS-PON)'], ['Mesma CTO, mesma fibra, mesmo splitter']],
+        analogy: 'O prisma não se importa com a cor do feixe que entra — ele divide do mesmo jeito. Pura física óptica.',
+        link: 'fiber'
+      },
+      {
+        loc: '06 · Casa', name: 'ONT XGS-PON', role: 'o tradutor 10G', icon: 'ic_onu', illust: 'il_ont_xgs',
+        desc: '<p>Versão atualizada da ONT, capaz de modular/demodular nos comprimentos de onda do XGS-PON (1577/1270 nm) e entregar até <strong>10 Gbps simétricos</strong>.</p><p>Tem porta LAN de <strong>10 GbE</strong> (RJ-45 ou SFP+) para aproveitar a velocidade total — caso contrário, a Wi-Fi/LAN seria o gargalo.</p>',
+        specs: [['Conector', 'SC/APC (mesmo do GPON)'], ['Portas LAN', '1× 10GbE + 3× 1GbE típico'], ['Wi-Fi típico', 'Wi-Fi 6E ou Wi-Fi 7'], ['Fabricantes', 'Nokia XS-2426G, Huawei HN8145X6, ZTE F6605']],
+        analogy: 'A ONU vitaminada: mesmo formato, mesma conexão, mas com 4× a capacidade.',
+        link: 'fiber'
+      },
+      {
+        loc: '07 · Casa', name: 'Wi-Fi 6/7', role: 'o gargalo final', icon: 'ic_wifi6', illust: 'il_wifi6',
+        desc: '<p>Com 10 Gbps chegando na ONT, o Wi-Fi vira o ponto crítico da casa. <strong>Wi-Fi 6E</strong> (que usa também a faixa de 6 GHz) e <strong>Wi-Fi 7</strong> (até 46 Gbps teóricos, multi-link) começam a entregar essa velocidade sem fio.</p><p>Para tirar proveito real dos 10 Gbps, o ideal é usar cabo Cat 6a/7 nas tomadas e Wi-Fi 7 para os dispositivos próximos.</p>',
+        specs: [['Wi-Fi 6E', '2.4 + 5 + 6 GHz, OFDMA, 1024-QAM'], ['Wi-Fi 7', '320 MHz, 4096-QAM, MLO (Multi-Link Operation)'], ['Vazão prática Wi-Fi 7', '4-6 Gbps em condições reais']],
+        analogy: 'Você tem uma adutora gigante chegando em casa — agora precisa de torneiras grandes o suficiente para aproveitar a vazão.',
+      }
+    ]
+  }
+];
+
+/* =========================================================================
+   RENDERING
+   ========================================================================= */
+
+const tabsEl = document.getElementById('tabs');
+const metaEl = document.getElementById('arch-meta');
+const overviewEl = document.getElementById('arch-overview');
+const flowEl = document.getElementById('flow');
+const mediumEl = document.getElementById('medium');
+const footnoteEl = document.getElementById('footnote');
+
+function renderTabs(activeId) {
+  tabsEl.innerHTML = ARCHS.map((a, i) => `
+    <button class="tab ${a.id === activeId ? 'active' : ''}" data-id="${a.id}">
+      <span class="tab-num">0${i+1}</span>
+      <span>${a.name}</span>
+    </button>
+  `).join('');
+  tabsEl.querySelectorAll('.tab').forEach(btn => {
+    btn.addEventListener('click', () => renderArch(btn.dataset.id));
+  });
+}
+
+function renderArch(id) {
+  const arch = ARCHS.find(a => a.id === id);
+  if (!arch) return;
+
+  renderTabs(id);
+
+  // Meta
+  metaEl.innerHTML = `
+    <div class="meta-item">
+      <span class="meta-label">Era</span>
+      <span class="meta-value">${arch.period}</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">Velocidade típica</span>
+      <span class="meta-value">${arch.speed}</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">Meio físico</span>
+      <span class="meta-value">${arch.medium}</span>
+    </div>
+  `;
+
+  overviewEl.innerHTML = arch.overview;
+
+  // Flow
+  flowEl.innerHTML = '';
+  let delay = 0;
+  arch.nodes.forEach((n, i) => {
+    const nodeEl = document.createElement('button');
+    nodeEl.className = 'node';
+    nodeEl.setAttribute('aria-label', `Ver detalhes de ${n.name}`);
+    nodeEl.dataset.archId = id;
+    nodeEl.dataset.nodeIdx = i;
+    nodeEl.innerHTML = `
+      <div class="node-plus">+</div>
+      <div class="num">${n.loc}</div>
+      <div class="icon">${SVG[n.icon] || ''}</div>
+      <div class="name">${n.name}</div>
+      <div class="role">${n.role}</div>
+      <div class="desc">${n.desc.replace(/<[^>]+>/g, '').slice(0, 110)}${n.desc.length > 110 ? '…' : ''}</div>
+    `;
+    nodeEl.addEventListener('click', () => openModal(id, i));
+    flowEl.appendChild(nodeEl);
+
+    // Connector
+    if (i < arch.nodes.length - 1) {
+      const linkEl = document.createElement('div');
+      linkEl.className = `link ${n.link || 'fiber'}`;
+      linkEl.dataset.delay = delay % 6;
+      delay++;
+      flowEl.appendChild(linkEl);
+    }
+  });
+
+  // Medium labels under flow
+  const mediums = arch.nodes.map(n => {
+    const link = n.link || 'fiber';
+    const labels = {
+      fiber: { text: 'Fibra / Ethernet', cls: 'fiber' },
+      copper: { text: 'Cobre', cls: 'copper' },
+      radio: { text: 'Rádio', cls: 'radio' },
+      passive: { text: 'Fibra (passiva)', cls: 'fiber' }
+    };
+    return labels[link] || labels.fiber;
+  });
+  mediumEl.innerHTML = mediums.slice(0, -1).map(m =>
+    `<div class="medium-label ${m.cls}">${m.text}</div>`
+  ).join('') + '<div class="medium-label signal">Wi-Fi / Eth</div>';
+
+  // Footnote (general)
+  footnoteEl.innerHTML = `
+    <span class="label">Resumo · ${arch.name}</span>
+    ${arch.overview}
+  `;
+
+  // Layout adjustment: change grid columns based on node count
+  flowEl.style.gridTemplateColumns = `repeat(${arch.nodes.length}, 1fr)`;
+  mediumEl.style.gridTemplateColumns = `repeat(${arch.nodes.length}, 1fr)`;
+}
+
+/* MODAL */
+const modal = document.getElementById('modal');
+const modalSvg = document.getElementById('modal-svg');
+const modalEyebrow = document.getElementById('modal-eyebrow');
+const modalTitle = document.getElementById('modal-title');
+const modalTagline = document.getElementById('modal-tagline');
+const modalBody = document.getElementById('modal-body');
+const modalSpecs = document.getElementById('modal-specs');
+const modalAnalogy = document.getElementById('modal-analogy');
+const modalClose = document.getElementById('modal-close');
+
+function openModal(archId, nodeIdx) {
+  const arch = ARCHS.find(a => a.id === archId);
+  const n = arch.nodes[nodeIdx];
+  if (!n) return;
+
+  modalSvg.innerHTML = SVG[n.illust] || SVG[n.icon] || '';
+  modalEyebrow.textContent = `${arch.name} · ${n.loc}`;
+  modalTitle.textContent = n.name;
+  modalTagline.textContent = n.role;
+  modalBody.innerHTML = n.desc.startsWith('<p>') ? n.desc : `<p>${n.desc}</p>`;
+
+  if (n.specs && n.specs.length) {
+    modalSpecs.style.display = 'flex';
+    modalSpecs.innerHTML = `
+      <div class="specs-label">Detalhes técnicos</div>
+      ${n.specs.map(([label, val]) => `
+        <div class="spec-item"><span><strong>${label}:</strong> ${val}</span></div>
+      `).join('')}
+    `;
+  } else {
+    modalSpecs.style.display = 'none';
+  }
+
+  if (n.analogy) {
+    modalAnalogy.style.display = 'block';
+    modalAnalogy.innerHTML = `<span style="display:block;font-family:'JetBrains Mono',monospace;font-style:normal;font-size:9.5px;letter-spacing:0.25em;color:var(--signal);text-transform:uppercase;margin-bottom:6px;">analogia</span>${n.analogy}`;
+  } else {
+    modalAnalogy.style.display = 'none';
+  }
+
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  modalClose.focus();
+}
+
+function closeModal() {
+  modal.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+modalClose.addEventListener('click', closeModal);
+modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && modal.classList.contains('open')) closeModal();
+});
+
+// Initial render: start with GPON (the current standard) so the user sees something modern first.
+// But the tabs are in chronological order, so they can navigate to older techs easily.
+renderArch('gpon');
+</script>
+
+</body>
+</html>
