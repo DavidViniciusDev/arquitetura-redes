@@ -2,7 +2,7 @@
 
 Página interativa que conta a história das **arquiteturas de acesso à internet** usadas pelos provedores, do *discado* ao *XGS-PON*, em seis arquiteturas comparáveis lado a lado.
 
-Cada arquitetura é apresentada como um **fluxo de 7 equipamentos** — da internet pública até o dispositivo na casa do cliente — e cada equipamento pode ser clicado para abrir um modal com descrição detalhada, especificações técnicas, analogia e ilustração estilizada em SVG.
+Cada arquitetura é apresentada como um **fluxo de 7–8 equipamentos** — da internet pública até o dispositivo na casa do cliente — e cada equipamento pode ser clicado para abrir um modal com descrição detalhada, especificações técnicas, analogia e ilustração estilizada em SVG.
 
 ## Arquiteturas cobertas
 

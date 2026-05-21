@@ -506,6 +506,7 @@ const SVG = {
   ic_switch: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="9" width="20" height="6" rx="1"/><path d="M6 9V6M10 9V6M14 9V6M18 9V6M6 18v-3M10 18v-3M14 18v-3M18 18v-3"/></svg>`,
   ic_olt: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="6" width="18" height="12" rx="1.5"/><path d="M7 10h2M7 14h2M12 10h2M12 14h2"/><circle cx="18" cy="12" r="1" fill="currentColor"/></svg>`,
   ic_split: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M2 12h6"/><path d="M8 12l4-6M8 12l4-2M8 12l4 2M8 12l4 6"/><circle cx="14" cy="6" r="1.2"/><circle cx="14" cy="10" r="1.2"/><circle cx="14" cy="14" r="1.2"/><circle cx="14" cy="18" r="1.2"/></svg>`,
+  ic_cto: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="6" y="3" width="12" height="18" rx="1"/><rect x="8" y="5.5" width="8" height="2.5" rx="0.4"/><path d="M8 12h8M8 15h8M8 18h8"/><circle cx="10" cy="12" r="0.6" fill="currentColor"/><circle cx="12" cy="12" r="0.6" fill="currentColor"/><circle cx="14" cy="12" r="0.6" fill="currentColor"/><circle cx="10" cy="15" r="0.6" fill="currentColor"/><circle cx="12" cy="15" r="0.6" fill="currentColor"/><circle cx="14" cy="15" r="0.6" fill="currentColor"/><circle cx="10" cy="18" r="0.6" fill="currentColor"/><circle cx="12" cy="18" r="0.6" fill="currentColor"/><circle cx="14" cy="18" r="0.6" fill="currentColor"/></svg>`,
   ic_onu: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 10l8-6 8 6v9a1 1 0 0 1-1 1h-14a1 1 0 0 1-1-1z"/><circle cx="12" cy="13" r="2"/><path d="M12 13v-2"/></svg>`,
   ic_devices: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="14" height="10" rx="1"/><path d="M10 14v3M7 17h6"/><rect x="17" y="9" width="5" height="9" rx="0.8"/><circle cx="19.5" cy="16" r="0.4" fill="currentColor"/></svg>`,
   ic_modem: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="4" y="8" width="16" height="9" rx="1"/><circle cx="8" cy="13" r="0.8" fill="currentColor"/><circle cx="11" cy="13" r="0.8" fill="currentColor"/><circle cx="14" cy="13" r="0.8" fill="currentColor"/><path d="M12 8V5M10 5h4"/></svg>`,
@@ -1175,21 +1176,28 @@ const ARCHS = [
         link: 'passive'
       },
       {
-        loc: '05 · Poste / CTO', name: 'Splitter', role: 'o divisor passivo', icon: 'ic_split', illust: 'il_splitter',
-        desc: '<p>Também chamado de <strong>Divisor Óptico</strong>. Componente <strong>passivo</strong> — não tem energia, não tem eletrônica, não dá defeito eletrônico, não trava. É só óptica pura.</p><p>Pega 1 fibra que vem da OLT e divide em 8, 16, 32 ou 64 fibras para os clientes. Fica geralmente no poste, dentro de uma <strong>CTO</strong> (Caixa de Terminação Óptica).</p><p>A divisão tem um custo: cada vez que divide por 2, perde metade do sinal (3 dB). Por isso o número de saídas é limitado pelo "budget óptico" da OLT.</p>',
+        loc: '05 · Poste', name: 'Splitter', role: 'o divisor passivo', icon: 'ic_split', illust: 'il_splitter',
+        desc: '<p>Também chamado de <strong>Divisor Óptico</strong>. Componente <strong>passivo</strong> — não tem energia, não tem eletrônica, não dá defeito eletrônico, não trava. É só óptica pura.</p><p>Pega 1 fibra que vem da OLT e divide em 8, 16, 32 ou 64 fibras para os clientes. Mora dentro da <strong>CTO</strong> (próximo passo do fluxo) ou em uma CDOE/CEO mais perto da central.</p><p>A divisão tem um custo: cada vez que divide por 2, perde metade do sinal (3 dB). Por isso o número de saídas é limitado pelo "budget óptico" da OLT.</p>',
         specs: [['Tecnologia', 'PLC (Planar Lightwave Circuit) ou Fused Biconical Taper'], ['Divisões comuns', '1:2, 1:4, 1:8, 1:16, 1:32, 1:64'], ['Atenuação 1:32', '~17,5 dB'], ['Vida útil', 'Décadas (sem partes móveis nem eletrônica)']],
         analogy: 'Um prisma óptico: um feixe de luz entra, vários saem. Sem energia, sem partes móveis, sem complicação.',
+        link: 'passive'
+      },
+      {
+        loc: '06 · Rua / Poste', name: 'CTO', role: 'a caixa de terminação óptica', icon: 'ic_cto', illust: 'il_cto',
+        desc: '<p><strong>Caixa de Terminação Óptica</strong>. É a caixa fixada no poste (ou em fachada / poço subterrâneo) que <em>abriga o splitter</em> e termina as fibras drop que vão até cada cliente. É o último ponto de infraestrutura compartilhada do provedor antes da casa do assinante.</p><p>A fibra de distribuição chega pela porta de entrada, o splitter divide o sinal internamente, e cada saída do splitter é conectada a um <strong>conector frontal</strong> — de onde sai uma fibra drop em direção a uma residência.</p><p>Quando o técnico "ativa" um cliente novo, é nessa caixa que ele faz o lance da fibra drop e a fusão (ou plug em conector pré-conectorizado) com a porta livre.</p>',
+        specs: [['Capacidade típica', '8, 16 ou 24 portas drop'], ['Vedação', 'IP55 a IP68 (chuva, sol, poeira)'], ['Material', 'ABS ou policarbonato anti-UV'], ['Instalação', 'Poste, fachada, poço subterrâneo'], ['Acessório típico', 'Bandeja de emenda + splitter PLC interno']],
+        analogy: 'O quadro de luz do prédio, mas para fibra: um cabo grosso entra, várias saídas — uma para cada apartamento.',
         link: 'fiber'
       },
       {
-        loc: '06 · Casa', name: 'ONU / ONT', role: 'o tradutor da casa', icon: 'ic_onu', illust: 'il_onu',
+        loc: '07 · Casa', name: 'ONU / ONT', role: 'o tradutor da casa', icon: 'ic_onu', illust: 'il_onu',
         desc: '<p><strong>Optical Network Unit / Terminal</strong> — o aparelhinho que fica na casa do cliente. Recebe a luz pela fibra e converte de volta em sinal elétrico (Ethernet/Wi-Fi).</p><p>Cada ONU tem um <strong>SN</strong> (Serial Number) único de fábrica que é registrado na OLT — é assim que o provedor sabe qual ONU é qual cliente, mesmo todas estando no mesmo "barramento" óptico.</p><p>ONUs modernas já vêm com Wi-Fi 5/6 integrado e várias portas LAN.</p>',
         specs: [['Diferença ONU vs ONT', 'Técnica (ONU = unit, ONT = terminal). Na prática, o mesmo aparelho.'], ['Conector', 'SC/APC (azul ou verde)'], ['Fabricantes', 'Huawei, Nokia, ZTE, Intelbras, Fiberhome']],
         analogy: 'Caixa de correio da casa: recebe a entrega em "luz" e traduz para um formato que os aparelhos da casa entendem.',
         link: 'fiber'
       },
       {
-        loc: '07 · Casa', name: 'Dispositivos', role: 'os clientes finais', icon: 'ic_devices', illust: 'il_devices',
+        loc: '08 · Casa', name: 'Dispositivos', role: 'os clientes finais', icon: 'ic_devices', illust: 'il_devices',
         desc: 'Computadores, celulares, smart TVs, consoles — qualquer coisa que se conecte por Wi-Fi ou cabo de rede à ONU. Tipicamente Wi-Fi 5 (802.11ac) ou Wi-Fi 6 (802.11ax).',
         specs: [['Wi-Fi típico', '802.11ac / 802.11ax']],
         analogy: 'A torneira aberta: o sinal viajou da fonte global até o seu copo.',
@@ -1235,21 +1243,28 @@ const ARCHS = [
         link: 'passive'
       },
       {
-        loc: '05 · Poste / CTO', name: 'Splitter', role: 'o mesmo divisor passivo', icon: 'ic_split', illust: 'il_splitter',
+        loc: '05 · Poste', name: 'Splitter', role: 'o mesmo divisor passivo', icon: 'ic_split', illust: 'il_splitter',
         desc: '<p>A grande sacada do XGS-PON: o <strong>splitter é o mesmo do GPON</strong>. Por ser um componente passivo e óptico puro, ele simplesmente passa qualquer comprimento de onda dentro de sua faixa de operação (1260–1625 nm).</p><p>Por isso a migração para XGS-PON não exige tocar em nada na rua. Custo gigante economizado.</p>',
-        specs: [['Resposta espectral', '1260 a 1625 nm (cobre GPON e XGS-PON)'], ['Mesma CTO, mesma fibra, mesmo splitter']],
+        specs: [['Resposta espectral', '1260 a 1625 nm (cobre GPON e XGS-PON)'], ['Reaproveitamento', 'Mesma CTO, mesma fibra, mesmo splitter']],
         analogy: 'O prisma não se importa com a cor do feixe que entra — ele divide do mesmo jeito. Pura física óptica.',
+        link: 'passive'
+      },
+      {
+        loc: '06 · Rua / Poste', name: 'CTO', role: 'a mesma caixa, sem mexer', icon: 'ic_cto', illust: 'il_cto',
+        desc: '<p>A <strong>Caixa de Terminação Óptica</strong> instalada para GPON serve sem alteração para XGS-PON. Como é uma caixa puramente <strong>passiva</strong> (sem eletrônica, sem energia) e os conectores SC/APC funcionam em toda a banda PON, ela não tem nada que dependa do padrão usado.</p><p>Resultado: o provedor que já investiu em obra civil e cabeamento drop para GPON migra para 10 Gbps sem trocar uma única CTO na rua. Só muda OLT (line card) e ONT do cliente.</p>',
+        specs: [['Reaproveitamento', '100% da CTO existente de GPON'], ['Spectral pass-through', '1260–1625 nm (todos os padrões PON)'], ['Custo de migração na rua', 'R$ 0,00']],
+        analogy: 'A mesma caixa de correio: não importa se a carta veio em "tinta GPON" ou "tinta XGS-PON" — a caixa entrega do mesmo jeito.',
         link: 'fiber'
       },
       {
-        loc: '06 · Casa', name: 'ONT XGS-PON', role: 'o tradutor 10G', icon: 'ic_onu', illust: 'il_ont_xgs',
+        loc: '07 · Casa', name: 'ONT XGS-PON', role: 'o tradutor 10G', icon: 'ic_onu', illust: 'il_ont_xgs',
         desc: '<p>Versão atualizada da ONT, capaz de modular/demodular nos comprimentos de onda do XGS-PON (1577/1270 nm) e entregar até <strong>10 Gbps simétricos</strong>.</p><p>Tem porta LAN de <strong>10 GbE</strong> (RJ-45 ou SFP+) para aproveitar a velocidade total — caso contrário, a Wi-Fi/LAN seria o gargalo.</p>',
         specs: [['Conector', 'SC/APC (mesmo do GPON)'], ['Portas LAN', '1× 10GbE + 3× 1GbE típico'], ['Wi-Fi típico', 'Wi-Fi 6E ou Wi-Fi 7'], ['Fabricantes', 'Nokia XS-2426G, Huawei HN8145X6, ZTE F6605']],
         analogy: 'A ONU vitaminada: mesmo formato, mesma conexão, mas com 4× a capacidade.',
         link: 'fiber'
       },
       {
-        loc: '07 · Casa', name: 'Wi-Fi 6/7', role: 'o gargalo final', icon: 'ic_wifi6', illust: 'il_wifi6',
+        loc: '08 · Casa', name: 'Wi-Fi 6/7', role: 'o gargalo final', icon: 'ic_wifi6', illust: 'il_wifi6',
         desc: '<p>Com 10 Gbps chegando na ONT, o Wi-Fi vira o ponto crítico da casa. <strong>Wi-Fi 6E</strong> (que usa também a faixa de 6 GHz) e <strong>Wi-Fi 7</strong> (até 46 Gbps teóricos, multi-link) começam a entregar essa velocidade sem fio.</p><p>Para tirar proveito real dos 10 Gbps, o ideal é usar cabo Cat 6a/7 nas tomadas e Wi-Fi 7 para os dispositivos próximos.</p>',
         specs: [['Wi-Fi 6E', '2.4 + 5 + 6 GHz, OFDMA, 1024-QAM'], ['Wi-Fi 7', '320 MHz, 4096-QAM, MLO (Multi-Link Operation)'], ['Vazão prática Wi-Fi 7', '4-6 Gbps em condições reais']],
         analogy: 'Você tem uma adutora gigante chegando em casa — agora precisa de torneiras grandes o suficiente para aproveitar a vazão.',
